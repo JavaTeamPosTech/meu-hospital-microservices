@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.postechfiap.meuhospital</groupId>
+		<artifactId>meuhospital-parent</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>meuhospital-contracts</artifactId>
+	<packaging>jar</packaging>
+	<name>Meu Hospital - Shared Contracts</name>
+	<description>Modelos de dados (DTOs) e mensagens compartilhadas.</description>
+	<url/>
+
+	<dependencies>
+	</dependencies>
+
+	<build>
+	</build>
+
+</project>
