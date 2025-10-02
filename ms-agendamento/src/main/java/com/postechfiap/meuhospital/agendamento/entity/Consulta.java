@@ -37,7 +37,6 @@ public class Consulta {
     @Column(nullable = false)
     private StatusConsulta status = StatusConsulta.AGENDADA;
 
-    @Lob
     private String detalhesDaConsulta;
 
     @Column(name = "created_at", nullable = false, updatable = false)

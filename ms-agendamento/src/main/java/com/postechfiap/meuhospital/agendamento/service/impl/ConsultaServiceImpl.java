@@ -1,6 +1,7 @@
 package com.postechfiap.meuhospital.agendamento.service.impl;
 
 import com.postechfiap.meuhospital.agendamento.client.AuthClientService;
+import com.postechfiap.meuhospital.agendamento.dto.MedicoProjectionResponse;
 import com.postechfiap.meuhospital.agendamento.dto.PacienteDetails;
 import com.postechfiap.meuhospital.agendamento.entity.Consulta;
 import com.postechfiap.meuhospital.agendamento.entity.MedicoProjection;
@@ -16,11 +17,14 @@ import com.postechfiap.meuhospital.contracts.agendamento.ConsultaResponse;
 import com.postechfiap.meuhospital.contracts.events.ConsultaCriadaEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-@Service
+@Service("consultaService")
 public class ConsultaServiceImpl implements ConsultaService {
 
     private static final int DURACAO_PADRAO_MINUTOS = 30;
@@ -104,6 +108,32 @@ public class ConsultaServiceImpl implements ConsultaService {
     @Override
     public boolean isPacienteDaConsulta(UUID consultaId, UUID pacienteId) {
         return consultaRepository.findByIdAndPacienteId(consultaId, pacienteId).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MedicoProjectionResponse> listarMedicosDisponiveis(String especialidade) {
+        List<MedicoProjection> medicos;
+
+        if (StringUtils.hasText(especialidade)) {
+            medicos = medicoProjectionRepository.findAllByEspecialidade(especialidade);
+        } else {
+            medicos = medicoProjectionRepository.findAll();
+        }
+
+        return medicos.stream()
+                .filter(medico -> medico.getRole() == com.postechfiap.meuhospital.contracts.core.Role.MEDICO)
+                .map(this::mapToMedicoResponse)
+                .collect(Collectors.toList());
+    }
+
+    private MedicoProjectionResponse mapToMedicoResponse(MedicoProjection medico) {
+        return new MedicoProjectionResponse(
+                medico.getId(),
+                medico.getNome(),
+                medico.getEspecialidade(),
+                medico.getNumeroRegistro()
+        );
     }
 
     private PacienteDetails buscarValidarPaciente(ConsultaRequest request) {

@@ -1,14 +1,17 @@
 package com.postechfiap.meuhospital.agendamento.controller;
 
+import com.postechfiap.meuhospital.agendamento.dto.MedicoProjectionResponse;
 import com.postechfiap.meuhospital.agendamento.service.ConsultaService;
 import com.postechfiap.meuhospital.contracts.agendamento.ConsultaRequest;
 import com.postechfiap.meuhospital.contracts.agendamento.ConsultaResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -44,7 +47,6 @@ public class ConsultaController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('MEDICO', 'ENFERMEIRO')")
     public ResponseEntity<ConsultaResponse> editarConsulta(@PathVariable UUID id, @RequestBody @Valid ConsultaRequest request) {
-        // NOTE: A lógica de edição no Service deve ser implementada em seguida.
         ConsultaResponse response = consultaService.editarConsulta(id, request);
         return ResponseEntity.ok(response);
     }
@@ -56,7 +58,6 @@ public class ConsultaController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('MEDICO', 'ENFERMEIRO')")
     public ResponseEntity<Void> cancelarConsulta(@PathVariable UUID id) {
-        // NOTE: A lógica de cancelamento no Service deve ser implementada em seguida.
         consultaService.cancelarConsulta(id);
         return ResponseEntity.noContent().build();
     }
@@ -68,9 +69,23 @@ public class ConsultaController {
      * - OU Permite se o ID do usuário autenticado for o paciente da consulta.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('MEDICO', 'ENFERMEIRO') or @consultaService.isPacienteDaConsulta(#id, authentication.principal.id)")
+    @PreAuthorize("hasAnyAuthority('MEDICO', 'ENFERMEIRO') or @consultaService.isPacienteDaConsulta(#id, authentication.principal.id.toString())")
     public ResponseEntity<ConsultaResponse> buscarConsultaPorId(@PathVariable UUID id) {
         ConsultaResponse response = consultaService.buscarConsultaPorId(id);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Endpoint para listar médicos disponíveis, opcionalmente por especialidade.
+     * Requer que o usuário esteja autenticado (qualquer Role).
+     */
+    @GetMapping("/medicos")
+    @Operation(summary = "Lista médicos disponíveis (Projeção local)")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<MedicoProjectionResponse>> listarMedicos(
+            @RequestParam(required = false) String especialidade) {
+
+        List<MedicoProjectionResponse> medicos = consultaService.listarMedicosDisponiveis(especialidade);
+        return ResponseEntity.ok(medicos);
     }
 }
