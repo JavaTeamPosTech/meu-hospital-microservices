@@ -16,6 +16,7 @@ public record ConsultaCriadaEvent(
         UUID medicoId,
         String nomeMedico,
         LocalDateTime dataConsulta,
+        String  statusConsulta, // Ex: "AGENDADA", "CANCELADA"
         String tipoEvento, // Ex: "CRIACAO" ou "ATUALIZACAO"
         LocalDateTime eventTimestamp
 ) {}

@@ -174,6 +174,7 @@ public class ConsultaServiceImpl implements ConsultaService {
                 consulta.getMedicoId(),
                 consulta.getNomeMedico(),
                 consulta.getDataConsulta(),
+                consulta.getStatus().toString(),
                 tipoEvento,
                 LocalDateTime.now()
         );
