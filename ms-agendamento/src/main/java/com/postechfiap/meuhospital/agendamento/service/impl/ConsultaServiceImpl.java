@@ -172,6 +172,7 @@ public class ConsultaServiceImpl implements ConsultaService {
                 email,
                 telefone,
                 consulta.getMedicoId(),
+                consulta.getNomeMedico(),
                 consulta.getDataConsulta(),
                 tipoEvento,
                 LocalDateTime.now()
