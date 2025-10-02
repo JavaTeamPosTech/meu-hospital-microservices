@@ -37,13 +37,11 @@ public class ConsultaServiceImpl implements ConsultaService {
         this.consultaProducer = consultaProducer;
     }
 
-    // --- CRIAÇÃO ---
-
     @Override
     @Transactional
     public ConsultaResponse criarConsulta(ConsultaRequest request) {
         MedicoProjection medico = validarMedicoExistente(request.medicoId());
-        validarDisponibilidade(request.medicoId(), request.dataConsulta()); // Removido duracaoMinutos
+        validarDisponibilidade(request.medicoId(), request.dataConsulta());
         PacienteDetails pacienteDetails = buscarValidarPaciente(request);
 
         Consulta novaConsulta = criarEntidadeConsulta(request, medico, pacienteDetails);
@@ -54,27 +52,22 @@ public class ConsultaServiceImpl implements ConsultaService {
         return mapToResponse(consultaSalva);
     }
 
-    // --- EDIÇÃO (PUT) ---
-
     @Override
     @Transactional
     public ConsultaResponse editarConsulta(UUID id, ConsultaRequest request) {
         Consulta consultaExistente = consultaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta com ID " + id + " não encontrada para edição."));
 
-        // CORREÇÃO: Removido o erro de sintaxe e ajustada a lógica
         if (consultaExistente.getStatus() != StatusConsulta.AGENDADA) {
             throw new RegraDeNegocioException("Consulta com status " + consultaExistente.getStatus().name() + " não pode ser editada.");
         }
 
         MedicoProjection medico = validarMedicoExistente(request.medicoId());
-        validarDisponibilidade(request.medicoId(), request.dataConsulta()); // Removido duracaoMinutos
+        validarDisponibilidade(request.medicoId(), request.dataConsulta());
         PacienteDetails pacienteDetails = buscarValidarPaciente(request);
 
         consultaExistente.setDataConsulta(request.dataConsulta());
         consultaExistente.setDetalhesDaConsulta(request.detalhesDaConsulta());
-        // Note: Nome do Paciente e Médico são geralmente imutáveis durante a edição da consulta
-        // Mas se a requisição permitir trocar o médico, isso deve ser validado.
 
         Consulta consultaAtualizada = consultaRepository.save(consultaExistente);
 
@@ -82,8 +75,6 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         return mapToResponse(consultaAtualizada);
     }
-
-    // --- CANCELAMENTO (DELETE LÓGICO) ---
 
     @Override
     @Transactional
@@ -100,11 +91,8 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         Consulta consultaCancelada = consultaRepository.save(consultaExistente);
 
-        // Publica evento de cancelamento
         publishConsultaEvent(consultaCancelada, null, "CANCELAMENTO");
     }
-
-    // --- BUSCA E AUTORIZAÇÃO ---
 
     @Override
     public ConsultaResponse buscarConsultaPorId(UUID id) {
@@ -117,10 +105,6 @@ public class ConsultaServiceImpl implements ConsultaService {
     public boolean isPacienteDaConsulta(UUID consultaId, UUID pacienteId) {
         return consultaRepository.findByIdAndPacienteId(consultaId, pacienteId).isPresent();
     }
-
-    // =========================================================================
-    // MÉTODOS AUXILIARES DE INTEGRAÇÃO E VALIDAÇÃO
-    // =========================================================================
 
     private PacienteDetails buscarValidarPaciente(ConsultaRequest request) {
         PacienteDetails pacienteDetails = authClientService.buscarPacientePorId(request.pacienteId());

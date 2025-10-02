@@ -31,7 +31,6 @@ public class UsuarioController {
      */
     @GetMapping("/{id}")
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyAuthority('MEDICO', 'ENFERMEIRO') or #id.toString() == authentication.principal.id.toString()")
     public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable UUID id) {
         UsuarioResponse response = usuarioService.buscarUsuarioPorId(id);
         return ResponseEntity.ok(response);

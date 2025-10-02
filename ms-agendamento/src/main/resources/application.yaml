@@ -33,6 +33,12 @@ spring:
       properties:
         spring.json.trusted.packages: "com.postechfiap.meuhospital.contracts.events"
         spring.json.value.default.type: com.postechfiap.meuhospital.contracts.events.MedicoEvent
+    producer:
+      client-id: ms-agendamento-producer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.properties.enabled: false
 
 app:
   jwt:
