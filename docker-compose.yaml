@@ -1,0 +1,43 @@
+services:
+  db-auth:
+    image: postgres:16-alpine
+    container_name: db-auth
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: autenticacao_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data/auth:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${DB_USERNAME} -d $${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+#  ms-autenticacao:
+#    # build:
+#    #   context: .
+#    #   dockerfile: ./ms-autenticacao/Dockerfile
+#    container_name: ms-autenticacao
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/${DB_NAME}
+#      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+#      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+#
+#      APP_JWT_SECRET: ${JWT_SECRET}
+#      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+#    depends_on:
+#      db-auth:
+#        condition: service_healthy
+#    restart: on-failure
+#    networks:
+#      - hospital_network
+
+networks:
+  hospital_network:
+    driver: bridge

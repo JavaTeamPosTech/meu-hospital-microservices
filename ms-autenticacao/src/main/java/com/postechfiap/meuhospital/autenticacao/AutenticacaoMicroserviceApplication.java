@@ -1,13 +1,13 @@
-package com.postechfiap.meuhospital.msagendamento;
+package com.postechfiap.meuhospital.autenticacao;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AgendamentoMicroserviceApplication {
+public class AutenticacaoMicroserviceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AgendamentoMicroserviceApplication.class, args);
+		SpringApplication.run(AutenticacaoMicroserviceApplication.class, args);
 	}
 
 }
