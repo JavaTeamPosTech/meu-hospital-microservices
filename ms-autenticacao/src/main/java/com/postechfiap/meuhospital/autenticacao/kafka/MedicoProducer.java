@@ -23,8 +23,6 @@ public class MedicoProducer {
      * @param event O DTO de evento (MedicoEvent) com os dados do médico.
      */
     public void sendMedicoEvent(MedicoEvent event) {
-        // Usa o ID do médico como chave (key) para garantir que mensagens do mesmo médico
-        // caiam na mesma partição (importante para ordenação)
         String key = event.userId().toString();
 
         kafkaTemplate.send(TOPIC_MEDICO_EVENTS, key, event);

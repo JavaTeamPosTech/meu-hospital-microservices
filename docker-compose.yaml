@@ -1,22 +1,103 @@
+
 services:
+
+  # ------ MS AUTENTICAÇÃO ------
+
   db-auth:
     image: postgres:16-alpine
     container_name: db-auth
     environment:
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: autenticacao_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${AUTENTICACAO_DB_NAME}
     ports:
       - "5432:5432"
     volumes:
       - ./postgres_data/auth:/var/lib/postgresql/data
+    networks:
+      - hospital_network
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${DB_USERNAME} -d $${DB_NAME}" ]
+      # O Health check usa as variáveis de ambiente internas (POSTGRES_USER/DB)
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  ms-autenticacao:
+    build:
+      context: .
+      dockerfile: ./ms-autenticacao/Dockerfile
+    container_name: ms-autenticacao
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/${AUTENTICACAO_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD:  ${DB_PASSWORD}
+
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db-auth:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      zookeeper:
+        condition: service_started
+    restart: on-failure
+    networks:
+      - hospital_network
+
+
+ # ------  MS AGENDAMENTO ------
+  db-agendamento:
+    image: postgres:16-alpine
+    container_name: db-agendamento
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${AGENDAMENTO_DB_NAME}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres_data/agendamento:/var/lib/postgresql/data
+    networks:
+      - hospital_network
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ms-agendamento:
+    build:
+      context: .
+      dockerfile: ./ms-agendamento/Dockerfile
+    container_name: ms-agendamento
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-agendamento:5432/${AGENDAMENTO_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      db-agendamento:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      ms-autenticacao:
+        condition: service_started
+    restart: on-failure
+    networks:
+      - hospital_network
+
+  # ------ KAFKA E ZOOKEEPER ------
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     container_name: zookeeper
@@ -29,7 +110,6 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
-    # CORREÇÃO: Kafka depende de Zookeeper, e não o contrário
     depends_on:
       - zookeeper
     ports:
@@ -58,28 +138,6 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     networks:
       - hospital_network
-
-
-#  ms-autenticacao:
-#    # build:
-#    #   context: .
-#    #   dockerfile: ./ms-autenticacao/Dockerfile
-#    container_name: ms-autenticacao
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/${DB_NAME}
-#      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-#      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-#
-#      APP_JWT_SECRET: ${JWT_SECRET}
-#      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
-#    depends_on:
-#      db-auth:
-#        condition: service_healthy
-#    restart: on-failure
-#    networks:
-#      - hospital_network
 
 networks:
   hospital_network:

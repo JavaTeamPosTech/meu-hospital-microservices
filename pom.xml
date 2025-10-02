@@ -27,6 +27,8 @@
     <postgres.version>42.7.3</postgres.version>
     <mysql.version>8.4.0</mysql.version>
     <spring-kafka.version>3.2.0</spring-kafka.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
   </properties>
 
   <modules>
@@ -34,8 +36,8 @@
     <!-- <module>meuhospital-common</module> -->
     <module>ms-autenticacao</module>
     <module>ms-agendamento</module>
-    <module>ms-notificacao</module>
-    <module>ms-historico</module>
+<!--    <module>ms-notificacao</module>-->
+<!--    <module>ms-historico</module>-->
   </modules>
 
   <!-- GERENCIAMENTO DE DEPENDÊNCIAS -->
@@ -108,6 +110,14 @@
         <plugin>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <configuration>
+            <encoding>UTF-8</encoding>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
