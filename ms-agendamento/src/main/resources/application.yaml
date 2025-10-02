@@ -39,7 +39,9 @@ app:
     secret: ${APP_JWT_SECRET}
     expiration: ${APP_JWT_EXPIRATION_MS}
 
+
   auth-service-url: http://ms-autenticacao:8080/usuarios
+  internal-secret: "SEGREDO-INTERNO-COMPARTILHADO-COM-AUTH"
 
   kafka:
     topic-medico-update: medico-events

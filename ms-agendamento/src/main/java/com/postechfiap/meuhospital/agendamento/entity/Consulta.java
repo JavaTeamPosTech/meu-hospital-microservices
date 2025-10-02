@@ -37,8 +37,6 @@ public class Consulta {
     @Column(nullable = false)
     private StatusConsulta status = StatusConsulta.AGENDADA;
 
-    private Integer duracaoMinutos = 30; // Padrão: 30 minutos
-
     @Lob
     private String detalhesDaConsulta;
 

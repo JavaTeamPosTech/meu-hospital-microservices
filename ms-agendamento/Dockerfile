@@ -6,6 +6,8 @@ COPY pom.xml .
 COPY meuhospital-contracts/pom.xml ./meuhospital-contracts/
 COPY meuhospital-contracts/src ./meuhospital-contracts/src
 
+COPY ms-autenticacao/pom.xml ./ms-autenticacao/
+
 COPY ms-agendamento/pom.xml ./ms-agendamento/
 COPY ms-agendamento/src ./ms-agendamento/src
 

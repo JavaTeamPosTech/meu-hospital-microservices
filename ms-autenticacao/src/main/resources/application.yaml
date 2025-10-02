@@ -37,6 +37,8 @@ app:
     secret: ${APP_JWT_SECRET}
     expiration: ${APP_JWT_EXPIRATION_MS}
 
+  internal-secret: "SEGREDO-INTERNO-COMPARTILHADO-COM-AUTH"
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

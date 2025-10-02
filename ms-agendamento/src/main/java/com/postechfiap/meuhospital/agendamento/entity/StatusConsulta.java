@@ -3,7 +3,7 @@ package com.postechfiap.meuhospital.agendamento.entity;
 /**
  * Define os possíveis status de uma consulta.
  */
-enum StatusConsulta {
+public enum StatusConsulta {
     AGENDADA,
     CANCELADA,
     REALIZADA
