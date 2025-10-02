@@ -7,7 +7,8 @@ spring:
     username: username
     password: password
     driver-class-name: org.postgresql.Driver
-
+    hikari:
+      max-lifetime: 1800000
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,6 +20,15 @@ spring:
           time_zone: UTC
   jackson:
     default-property-inclusion: non_null
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      client-id: ms-autenticacao-producer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.properties.enabled: false
 
 app:
   jwt:

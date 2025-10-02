@@ -3,16 +3,19 @@ package com.postechfiap.meuhospital.autenticacao.service.impl;
 import com.postechfiap.meuhospital.autenticacao.entity.Usuario;
 import com.postechfiap.meuhospital.autenticacao.exception.RecursoNaoEncontradoException;
 import com.postechfiap.meuhospital.autenticacao.exception.UsuarioExistenteException;
+import com.postechfiap.meuhospital.autenticacao.kafka.MedicoProducer;
 import com.postechfiap.meuhospital.autenticacao.mapper.UsuarioMapper;
 import com.postechfiap.meuhospital.autenticacao.repository.UsuarioRepository;
 import com.postechfiap.meuhospital.autenticacao.service.UsuarioService;
 import com.postechfiap.meuhospital.contracts.core.Role;
 import com.postechfiap.meuhospital.contracts.core.UsuarioRegisterRequest;
 import com.postechfiap.meuhospital.contracts.core.UsuarioResponse;
+import com.postechfiap.meuhospital.contracts.events.MedicoEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,11 +29,13 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioMapper usuarioMapper;
     private final PasswordEncoder passwordEncoder;
+     private final MedicoProducer medicoProducer;
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, UsuarioMapper usuarioMapper, PasswordEncoder passwordEncoder) {
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, UsuarioMapper usuarioMapper, PasswordEncoder passwordEncoder, MedicoProducer medicoProducer) {
         this.usuarioRepository = usuarioRepository;
         this.usuarioMapper = usuarioMapper;
         this.passwordEncoder = passwordEncoder;
+        this.medicoProducer = medicoProducer;
     }
 
     /**
@@ -47,6 +52,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         novoUsuario.setSenha(passwordEncoder.encode(request.senha()));
 
         Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
+
+        if (usuarioSalvo.getRole() == Role.MEDICO) {
+            publishMedicoEvent(usuarioSalvo, "CRIACAO");
+        }
+
         return usuarioMapper.toResponse(usuarioSalvo);
     }
 
@@ -115,5 +125,19 @@ public class UsuarioServiceImpl implements UsuarioService {
                 throw new IllegalArgumentException("A data de nascimento é exclusiva para o perfil Paciente.");
             }
         }
+    }
+
+
+    private void publishMedicoEvent(Usuario medico, String tipoEvento) {
+        MedicoEvent event = new MedicoEvent(
+                medico.getId(),
+                medico.getNome(),
+                medico.getNumeroRegistro(),
+                medico.getEspecialidade(),
+                medico.getRole(),
+                tipoEvento,
+                LocalDateTime.now()
+        );
+        medicoProducer.sendMedicoEvent(event);
     }
 }
