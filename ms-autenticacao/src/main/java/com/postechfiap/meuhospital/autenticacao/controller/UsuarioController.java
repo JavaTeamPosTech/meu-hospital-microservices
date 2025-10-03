@@ -2,11 +2,13 @@ package com.postechfiap.meuhospital.autenticacao.controller;
 
 import com.postechfiap.meuhospital.autenticacao.service.UsuarioService;
 import com.postechfiap.meuhospital.contracts.core.UsuarioResponse;
+import com.postechfiap.meuhospital.contracts.usuario.PacienteResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -35,5 +37,18 @@ public class UsuarioController {
         UsuarioResponse response = usuarioService.buscarUsuarioPorId(id);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * NOVO: Endpoint protegido para listar todos os pacientes cadastrados.
+     * Requer autoridade: MÉDICO ou ENFERMEIRO.
+     */
+    @GetMapping("/pacientes")
+    @PreAuthorize("hasAnyAuthority('MEDICO', 'ENFERMEIRO')")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<List<PacienteResponse>> listarPacientes() {
+        List<PacienteResponse> response = usuarioService.listarPacientes();
+        return ResponseEntity.ok(response);
+    }
+
 
 }

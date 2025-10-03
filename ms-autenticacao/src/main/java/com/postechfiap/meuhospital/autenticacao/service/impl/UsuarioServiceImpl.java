@@ -11,13 +11,16 @@ import com.postechfiap.meuhospital.contracts.core.Role;
 import com.postechfiap.meuhospital.contracts.core.UsuarioRegisterRequest;
 import com.postechfiap.meuhospital.contracts.core.UsuarioResponse;
 import com.postechfiap.meuhospital.contracts.events.MedicoEvent;
+import com.postechfiap.meuhospital.contracts.usuario.PacienteResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Implementação do Serviço de gestão de usuários (CRUD e validação de domínio).
@@ -68,6 +71,16 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário com ID " + id + " não encontrado."));
         return usuarioMapper.toResponse(usuario);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PacienteResponse> listarPacientes() {
+        List<Usuario> pacientes  = usuarioRepository.findByRole(Role.PACIENTE);
+        return usuarioMapper.toResponseList(pacientes)
+                .stream()
+                .map(u -> new PacienteResponse(u.id(), u.nome(), u.cpf(), u.email(), u.telefone()))
+                .collect(Collectors.toList());
     }
 
     /**

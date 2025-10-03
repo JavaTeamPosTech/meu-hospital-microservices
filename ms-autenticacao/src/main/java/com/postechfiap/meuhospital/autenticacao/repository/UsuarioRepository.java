@@ -1,10 +1,12 @@
 package com.postechfiap.meuhospital.autenticacao.repository;
 
 import com.postechfiap.meuhospital.autenticacao.entity.Usuario;
+import com.postechfiap.meuhospital.contracts.core.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,4 +38,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
      * Busca um usuário pelo e-mail para operações de domínio.
      */
     Optional<Usuario> findOptionalByEmail(String email);
+
+    List<Usuario> findByRole(Role role);
 }

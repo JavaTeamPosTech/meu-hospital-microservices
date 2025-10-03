@@ -3,7 +3,9 @@ package com.postechfiap.meuhospital.autenticacao.service;
 import com.postechfiap.meuhospital.autenticacao.entity.Usuario;
 import com.postechfiap.meuhospital.contracts.core.UsuarioRegisterRequest;
 import com.postechfiap.meuhospital.contracts.core.UsuarioResponse;
+import com.postechfiap.meuhospital.contracts.usuario.PacienteResponse;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,4 +35,6 @@ public interface UsuarioService {
      * @return Entidade Usuario (para uso interno do Service).
      */
     Optional<Usuario> buscarUsuarioPorEmail(String email);
+
+    List<PacienteResponse> listarPacientes();
 }
