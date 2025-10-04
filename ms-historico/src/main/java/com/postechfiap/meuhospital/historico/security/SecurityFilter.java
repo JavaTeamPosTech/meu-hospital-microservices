@@ -1,4 +1,4 @@
-package com.postechfiap.meuhospital.agendamento.security;
+package com.postechfiap.meuhospital.historico.security;
 
 import com.postechfiap.meuhospital.contracts.core.Role;
 import io.jsonwebtoken.JwtException;
@@ -21,11 +21,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 
-/**
- * Filtro JWT para o ms-agendamento.
- * CRÍTICO: Não faz busca no banco. Apenas valida o token e cria o contexto de segurança
- * com base nas Claims (ID e Role) presentes no JWT.
- */
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
@@ -47,24 +42,20 @@ public class SecurityFilter extends OncePerRequestFilter {
         try {
             if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // 1. Extrai claims essenciais sem ir ao banco
                 String login = jwtService.extractUsername(token);
                 Role role = Role.valueOf(jwtService.extractClaim(token, claims -> claims.get("role", String.class)));
                 UUID userId = jwtService.extractUserId(token);
 
-                // 2. Cria UserDetails "fake" apenas com as claims necessárias para o @PreAuthorize
                 UserDetails userDetails = new User(
-                        login, // username
-                        "", // password (não importa em stateless)
+                        login,
+                        userId.toString(),
                         Collections.singletonList(new SimpleGrantedAuthority(role.name()))
                 ) {
-                    // Adiciona o ID do usuário ao objeto principal para uso no SpEL
                     public UUID getId() { return userId; }
                 };
 
 
                 if (jwtService.isTokenValid(token, userDetails)) {
-                    // 3. Cria contexto de autenticação
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
 
@@ -91,13 +82,19 @@ public class SecurityFilter extends OncePerRequestFilter {
         return authHeader.substring(7);
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-
-        return path.startsWith("/swagger-ui") ||
-                path.startsWith("/v3/api-docs") ||
-                path.startsWith("/actuator") ||
-                path.equals("/swagger-ui.html");
-    }
+//    @Override
+//    protected boolean shouldNotFilter(HttpServletRequest request) {
+//        String path = request.getRequestURI();
+//        String method = request.getMethod();
+//
+//        if (method.equals(HttpMethod.GET.name()) && (path.startsWith("/graphiql") || path.startsWith("/graphql"))) {
+//            return true;
+//        }
+//
+//        if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/actuator") || path.startsWith("/graphiql")) {
+//            return true;
+//        }
+//
+//        return false;
+//    }
 }

@@ -8,6 +8,7 @@ COPY meuhospital-contracts/src ./meuhospital-contracts/src
 
 COPY ms-notificacao/pom.xml ./ms-notificacao/
 COPY ms-autenticacao/pom.xml ./ms-autenticacao/
+COPY ms-historico/pom.xml ./ms-historico/
 
 COPY ms-agendamento/pom.xml ./ms-agendamento/
 COPY ms-agendamento/src ./ms-agendamento/src

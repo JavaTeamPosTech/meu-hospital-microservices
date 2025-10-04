@@ -1,1 +1,54 @@
-spring.application.name=microservice
+spring:
+  application:
+    name: ms-historico
+
+  # Configuração do PostgreSQL
+  datasource:
+    url: jdbc:postgresql://historico-db:5432/historico_db
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Cria ou atualiza o schema do DB
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  security:
+    user:
+      name: ''
+      password: ''
+
+  # Configuração do Kafka (Consumidor)
+  kafka:
+    consumer:
+      group-id: historico-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.postechfiap.meuhospital.contracts.events
+            value:
+              default:
+                type: com.postechfiap.meuhospital.contracts.events.ConsultaCriadaEvent
+
+  # Configuração do GraphQL
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+
+server:
+  port: 8084
+
+app:
+  kafka:
+    topic-historico: notificacao-events
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    expiration: ${APP_JWT_EXPIRATION_MS}

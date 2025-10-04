@@ -36,7 +36,7 @@
     <module>ms-autenticacao</module>
     <module>ms-agendamento</module>
     <module>ms-notificacao</module>
-<!--    <module>ms-historico</module>-->
+    <module>ms-historico</module>
   </modules>
 
   <!-- GERENCIAMENTO DE DEPENDÊNCIAS -->

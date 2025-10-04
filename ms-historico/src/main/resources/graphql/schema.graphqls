@@ -1,0 +1,24 @@
+type HistoricoConsulta {
+    id: ID!
+    pacienteId: ID!
+    medicoId: ID!
+    nomePaciente: String!
+    nomeMedico: String!
+    dataConsulta: String!
+    status: String!
+    dataRegistro: String!
+}
+
+type Query {
+    # Lista todas as consultas (pode ser paginada, mas simplificamos aqui)
+    consultasHistorico: [HistoricoConsulta!]!
+
+    # Busca por ID
+    consultaHistoricoPorId(id: ID!): HistoricoConsulta
+
+    # Busca por ID do Paciente
+    consultasHistoricoPorPaciente(pacienteId: ID!): [HistoricoConsulta!]!
+
+    # Busca por ID do Médico
+    consultasHistoricoPorMedico(medicoId: ID!): [HistoricoConsulta!]!
+}

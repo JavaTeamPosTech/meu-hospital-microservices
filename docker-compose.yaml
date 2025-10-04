@@ -11,12 +11,11 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgres_data/auth:/var/lib/postgresql/data
+      - ./data/postgres_data/auth:/var/lib/postgresql/data
     networks:
       - hospital_network
     restart: always
     healthcheck:
-      # O Health check usa as variáveis de ambiente internas (POSTGRES_USER/DB)
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
@@ -29,12 +28,10 @@ services:
     container_name: ms-autenticacao
     ports:
       - "8080:8080"
-      - "5005:5005"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/${AUTENTICACAO_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD:  ${DB_PASSWORD}
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
       APP_JWT_SECRET: ${JWT_SECRET}
       APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -60,7 +57,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./postgres_data/agendamento:/var/lib/postgresql/data
+      - ./data/postgres_data/agendamento:/var/lib/postgresql/data
     networks:
       - hospital_network
     restart: always
@@ -129,7 +126,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: notificacao_db
     volumes:
-      - ./mongo_data:/data/db
+      - ./data/mongo_data/notificacao:/data/db
     networks:
       - hospital_network
     restart: always
@@ -138,18 +135,62 @@ services:
     image: mongo-express
     container_name: mongo-express
     ports:
-      - "8083:8081" # Porta 8083 para evitar conflitos
+      - "8083:8081"
     environment:
-      # Configurações de autenticação para conectar ao MongoDB
-      ME_CONFIG_MONGODB_SERVER: mongodb # Hostname do serviço MongoDB
+      ME_CONFIG_MONGODB_SERVER: mongodb
       ME_CONFIG_MONGODB_PORT: 27017
       ME_CONFIG_MONGODB_ENABLE_ADMIN: 'true'
-      ME_CONFIG_BASICAUTH_USERNAME: user_express # Credenciais para acessar o Mongo-Express UI
+      ME_CONFIG_BASICAUTH_USERNAME: user_express
       ME_CONFIG_BASICAUTH_PASSWORD: password_express
       ME_CONFIG_MONGODB_ADMINUSERNAME: user
       ME_CONFIG_MONGODB_ADMINPASSWORD: password
     networks:
       - hospital_network
+
+  # ------ MS HISTORICO ------
+  historico-db:
+    image: postgres:15-alpine
+    container_name: historico-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: historico_db
+    volumes:
+      - ./data/postgres_data/historico:/var/lib/postgresql/data
+    networks:
+      - hospital_network
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d historico_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-historico:
+    build:
+      context: .
+      dockerfile: ms-historico/Dockerfile
+    container_name: ms-historico
+    ports:
+      - "8084:8084"
+      - "5006:5006"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      CONSULTA_TOPIC_NAME: consulta-events
+      SPRING_DATASOURCE_URL: jdbc:postgresql://historico-db:5432/historico_db
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006"
+    depends_on:
+      historico-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - hospital_network
+    restart: always
 
   # ------ KAFKA E ZOOKEEPER ------
   zookeeper:
@@ -207,8 +248,8 @@ services:
     container_name: mailhog
     platform: linux/amd64
     ports:
-      - "1025:1025" # Porta SMTP para o ms-notificacao se conectar
-      - "8025:8025" # Porta Web UI para você ver os e-mails
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - hospital_network
 
