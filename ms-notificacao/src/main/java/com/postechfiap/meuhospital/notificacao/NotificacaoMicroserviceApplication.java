@@ -1,4 +1,4 @@
-package com.postechfiap.meuhospital.msnotificacao;
+package com.postechfiap.meuhospital.notificacao;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

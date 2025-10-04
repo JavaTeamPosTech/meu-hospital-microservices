@@ -4,8 +4,10 @@ WORKDIR /app
 COPY pom.xml .
 
 COPY meuhospital-contracts/pom.xml ./meuhospital-contracts/
-COPY ms-agendamento/pom.xml ./ms-agendamento/
 COPY ms-autenticacao/pom.xml ./ms-autenticacao/
+
+COPY ms-agendamento/pom.xml ./ms-agendamento/
+COPY ms-notificacao/pom.xml ./ms-notificacao/
 
 RUN mvn dependency:go-offline -B
 

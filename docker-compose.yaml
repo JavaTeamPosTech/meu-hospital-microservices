@@ -1,8 +1,6 @@
-
 services:
 
   # ------ MS AUTENTICAÇÃO ------
-
   db-auth:
     image: postgres:16-alpine
     container_name: db-auth
@@ -36,9 +34,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/${AUTENTICACAO_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD:  ${DB_PASSWORD}
-
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
-
       APP_JWT_SECRET: ${JWT_SECRET}
       APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -46,13 +42,12 @@ services:
       db-auth:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
       zookeeper:
         condition: service_started
     restart: on-failure
     networks:
       - hospital_network
-
 
  # ------  MS AGENDAMENTO ------
   db-agendamento:
@@ -93,20 +88,77 @@ services:
       db-agendamento:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
       ms-autenticacao:
         condition: service_started
     restart: on-failure
     networks:
       - hospital_network
 
+ # ------  MS NOTIFICACAO ------
+  ms-notificacao:
+    build:
+      context: .
+      dockerfile: ./ms-notificacao/Dockerfile
+    container_name: ms-notificacao
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATA_MONGODB_URI: mongodb://user:password@mongodb:27017/notificacao_db?authSource=admin
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+      mongodb:
+        condition: service_started
+    restart: on-failure
+    networks:
+      - hospital_network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: notificacao_db
+    volumes:
+      - ./mongo_data:/data/db
+    networks:
+      - hospital_network
+    restart: always
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    ports:
+      - "8083:8081" # Porta 8083 para evitar conflitos
+    environment:
+      # Configurações de autenticação para conectar ao MongoDB
+      ME_CONFIG_MONGODB_SERVER: mongodb # Hostname do serviço MongoDB
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: 'true'
+      ME_CONFIG_BASICAUTH_USERNAME: user_express # Credenciais para acessar o Mongo-Express UI
+      ME_CONFIG_BASICAUTH_PASSWORD: password_express
+      ME_CONFIG_MONGODB_ADMINUSERNAME: user
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+    networks:
+      - hospital_network
+
   # ------ KAFKA E ZOOKEEPER ------
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
+    image: zookeeper:3.8
     container_name: zookeeper
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+        ZOO_MY_ID: 1
+        ZOO_CLIENT_PORT: 2181
+        ZOO_TICK_TIME: 2000
     networks:
       - hospital_network
 
@@ -114,7 +166,8 @@ services:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     ports:
       - "9092:9092"
       - "9093:9093"
@@ -128,6 +181,12 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - hospital_network
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:9092 || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 15s
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -139,6 +198,17 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: meu-hospital-cluster
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - hospital_network
+
+  # ------ MAILHOG SMTP ------
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    platform: linux/amd64
+    ports:
+      - "1025:1025" # Porta SMTP para o ms-notificacao se conectar
+      - "8025:8025" # Porta Web UI para você ver os e-mails
     networks:
       - hospital_network
 

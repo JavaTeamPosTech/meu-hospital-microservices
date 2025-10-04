@@ -33,10 +33,9 @@
 
   <modules>
     <module>meuhospital-contracts</module>
-    <!-- <module>meuhospital-common</module> -->
     <module>ms-autenticacao</module>
     <module>ms-agendamento</module>
-<!--    <module>ms-notificacao</module>-->
+    <module>ms-notificacao</module>
 <!--    <module>ms-historico</module>-->
   </modules>
 
