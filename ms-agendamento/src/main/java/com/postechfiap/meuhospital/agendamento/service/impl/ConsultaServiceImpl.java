@@ -90,12 +90,14 @@ public class ConsultaServiceImpl implements ConsultaService {
             throw new RegraDeNegocioException("A consulta já está cancelada.");
         }
 
+        PacienteDetails pacienteDetails = authClientService.buscarPacientePorId(consultaExistente.getPacienteId());
+
         consultaExistente.setStatus(StatusConsulta.CANCELADA);
         consultaExistente.setDetalhesDaConsulta("Cancelado pela equipe em: " + LocalDateTime.now());
 
         Consulta consultaCancelada = consultaRepository.save(consultaExistente);
 
-        publishConsultaEvent(consultaCancelada, null, "CANCELAMENTO");
+        publishConsultaEvent(consultaCancelada, pacienteDetails, "CANCELAMENTO");
     }
 
     @Override
