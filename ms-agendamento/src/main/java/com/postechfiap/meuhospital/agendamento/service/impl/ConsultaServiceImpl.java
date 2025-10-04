@@ -15,11 +15,15 @@ import com.postechfiap.meuhospital.agendamento.service.ConsultaService;
 import com.postechfiap.meuhospital.contracts.agendamento.ConsultaRequest;
 import com.postechfiap.meuhospital.contracts.agendamento.ConsultaResponse;
 import com.postechfiap.meuhospital.contracts.events.ConsultaCriadaEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,6 +32,8 @@ import java.util.stream.Collectors;
 public class ConsultaServiceImpl implements ConsultaService {
 
     private static final int DURACAO_PADRAO_MINUTOS = 30;
+
+    private static final Logger log = LoggerFactory.getLogger(ConsultaServiceImpl.class);
 
     private final ConsultaRepository consultaRepository;
     private final MedicoProjectionRepository medicoProjectionRepository;
@@ -127,6 +133,53 @@ public class ConsultaServiceImpl implements ConsultaService {
                 .filter(medico -> medico.getRole() == com.postechfiap.meuhospital.contracts.core.Role.MEDICO)
                 .map(this::mapToMedicoResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public int marcarConsultasAnterioresComoRealizadas() {
+        LocalDateTime ontemAmeiaNoite = LocalDate.now().atStartOfDay();
+
+        // Busca todas as consultas AGENDADAS cuja data consulta é anterior ao início de hoje
+        List<Consulta> consultasExpiradas = consultaRepository.findAllByStatusAndDataConsultaBefore(
+                StatusConsulta.AGENDADA,
+                ontemAmeiaNoite
+        );
+
+        consultasExpiradas.forEach(consulta -> {
+            consulta.setStatus(StatusConsulta.REALIZADA);
+            // Publicar evento REALIZADA para o histórico se necessário, ou apenas logar
+            // Por simplicidade, faremos apenas a atualização de status aqui.
+        });
+
+        consultaRepository.saveAll(consultasExpiradas);
+        return consultasExpiradas.size();
+    }
+
+    @Override
+    @Transactional
+    public int enviarLembretesParaProximoDia() {
+        LocalDate amanha = LocalDate.now().plusDays(1);
+        LocalDateTime inicioAmanha = amanha.atStartOfDay();
+        LocalDateTime fimAmanha = amanha.atTime(LocalTime.MAX);
+
+        List<Consulta> consultasAmanha = consultaRepository.findAllByStatusAndDataConsultaBetween(
+                StatusConsulta.AGENDADA,
+                inicioAmanha,
+                fimAmanha
+        );
+
+        consultasAmanha.forEach(consulta -> {
+            try {
+                PacienteDetails pacienteDetails = authClientService.buscarPacientePorId(consulta.getPacienteId());
+
+                publishConsultaEvent(consulta, pacienteDetails, "LEMBRETE");
+            } catch (Exception e) {
+                log.error("Falha ao buscar detalhes do paciente {} para lembrete: {}", consulta.getPacienteId(), e.getMessage());
+            }
+        });
+
+        return consultasAmanha.size();
     }
 
     private MedicoProjectionResponse mapToMedicoResponse(MedicoProjection medico) {

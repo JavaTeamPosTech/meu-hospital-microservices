@@ -30,4 +30,8 @@ public interface ConsultaService {
      * Verifica se o paciente autenticado é o paciente desta consulta.
      */
     boolean isPacienteDaConsulta(UUID consultaId, UUID pacienteId);
+
+    int marcarConsultasAnterioresComoRealizadas();
+
+    int enviarLembretesParaProximoDia();
 }

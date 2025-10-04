@@ -20,6 +20,8 @@ public class NotificacaoService {
     private static final Logger log = LoggerFactory.getLogger(NotificacaoService.class);
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    private static final String TELEFONE_SUPORTE_HOSPITAL = "0800-90900";
+
     private final JavaMailSender mailSender;
     private final NotificacaoRepository notificacaoRepository;
 
@@ -48,16 +50,23 @@ public class NotificacaoService {
 
             String corpo = formatarCorpoEmail(event);
 
-            if ("CRIACAO".equals(event.tipoEvento())) {
-                message.setSubject("Confirmação de Agendamento");
-            } else if ("CANCELAMENTO".equals(event.tipoEvento())) {
-                message.setSubject("Alerta: Cancelamento de Consulta!");
-            } else {
-                message.setSubject("Aviso: Alteração na sua Consulta.");
+            switch (event.tipoEvento()) {
+                case "CRIACAO":
+                    message.setSubject("Confirmação de Agendamento");
+                    break;
+                case "CANCELAMENTO":
+                    message.setSubject("Alerta: Cancelamento de Consulta!");
+                    break;
+                case "LEMBRETE":
+                    message.setSubject("LEMBRETE: Sua Consulta é Amanhã!");
+                    break;
+                default:
+                    message.setSubject("Aviso: Alteração na sua Consulta.");
             }
 
             message.setText(corpo);
 
+            // Simula o envio via MailHog
             mailSender.send(message);
             log.info("E-mail SIMULADO enviado via MailHog para: {} (Tipo: {})", event.emailPaciente(), event.tipoEvento());
 
@@ -65,6 +74,7 @@ public class NotificacaoService {
             log.error("Falha ao enviar e-mail via MailHog para {}: {}", event.emailPaciente(), e.getMessage());
             statusEnvio = "FALHA - ERRO SMTP";
         } finally {
+            // Salva o log de auditoria no MongoDB
             NotificacaoLog logEntry = new NotificacaoLog(event, statusEnvio);
             notificacaoRepository.save(logEntry);
             log.info("Log de notificação salvo no MongoDB. Status: {}", statusEnvio);
@@ -77,21 +87,31 @@ public class NotificacaoService {
         StringBuilder builder = new StringBuilder();
         builder.append("Prezado(a) ").append(event.nomePaciente()).append(",\n\n");
 
-        if ("CRIACAO".equals(event.tipoEvento())) {
-            builder.append("Sua consulta foi confirmada com sucesso.\n");
-            builder.append("Detalhes:\n");
-        } else if ("CANCELAMENTO".equals(event.tipoEvento())) {
-            builder.append("SUA CONSULTA FOI CANCELADA.\n");
-            builder.append("Detalhes: Por favor, entre em contato com o hospital. \n");
-        } else if ("ATUALIZACAO".equals(event.tipoEvento())) {
-            builder.append("SUA CONSULTA FOI ALTERADA.\n");
-            builder.append("Favor verificar o novo horário e detalhes.\n");
+        switch (event.tipoEvento()) {
+            case "CRIACAO":
+                builder.append("Sua consulta foi confirmada com sucesso.\n");
+                break;
+            case "CANCELAMENTO":
+                builder.append("SUA CONSULTA FOI CANCELADA.\n");
+                break;
+            case "LEMBRETE":
+                builder.append("Este é um lembrete. Sua consulta está marcada para amanhã!\n");
+                break;
+            case "ATUALIZACAO":
+                builder.append("SUA CONSULTA FOI ALTERADA.\n");
+                break;
+            default:
+                builder.append("Detalhes da Consulta:\n");
         }
 
         builder.append("ID da Consulta: ").append(event.consultaId()).append("\n");
         builder.append("Data e Hora: ").append(data).append("\n");
+        builder.append("Médico(a): Dr(a). ").append(event.nomeMedico()).append("\n");
         builder.append("ID do Médico: ").append(event.medicoId()).append("\n\n");
-        builder.append("Telefone de Contato: ").append(event.telefonePaciente()).append("\n\n");
+
+        builder.append("Em caso de dúvidas ou necessidade de reagendamento, entre em contato:\n");
+        builder.append("Telefone de Suporte: ").append(TELEFONE_SUPORTE_HOSPITAL).append("\n");
+
         builder.append("Obrigado,\nEquipe Meu Hospital");
 
         return builder.toString();
