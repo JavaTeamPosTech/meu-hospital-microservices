@@ -35,6 +35,8 @@ services:
       APP_JWT_SECRET: ${JWT_SECRET}
       APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_SERVICE_URL: http://ms-autenticacao:8080/usuarios
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
     depends_on:
       db-auth:
         condition: service_healthy
@@ -46,7 +48,7 @@ services:
     networks:
       - hospital_network
 
- # ------  MS AGENDAMENTO ------
+  # ------  MS AGENDAMENTO ------
   db-agendamento:
     image: postgres:16-alpine
     container_name: db-agendamento
@@ -81,6 +83,10 @@ services:
       APP_JWT_SECRET: ${JWT_SECRET}
       APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      AUTH_SERVICE_URL: http://ms-autenticacao:8080/usuarios
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
+      AUTH_SERVICE_HOST: ms-autenticacao
+      AUTH_SERVICE_PORT: 8080
     depends_on:
       db-agendamento:
         condition: service_healthy
@@ -92,7 +98,7 @@ services:
     networks:
       - hospital_network
 
- # ------  MS NOTIFICACAO ------
+  # ------  MS NOTIFICACAO ------
   ms-notificacao:
     build:
       context: .
@@ -102,7 +108,7 @@ services:
       - "8082:8082"
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_DATA_MONGODB_URI: mongodb://user:password@mongodb:27017/notificacao_db?authSource=admin
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DB}?authSource=admin
       SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
     depends_on:
@@ -110,21 +116,21 @@ services:
         condition: service_healthy
       mailhog:
         condition: service_started
-      mongodb:
+      db-notificacao-mongo:
         condition: service_started
     restart: on-failure
     networks:
       - hospital_network
 
-  mongodb:
+  db-notificacao-mongo:
     image: mongo:6.0
     container_name: mongodb
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: user
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: notificacao_db
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DB}
     volumes:
       - ./data/mongo_data/notificacao:/data/db
     networks:
@@ -142,29 +148,32 @@ services:
       ME_CONFIG_MONGODB_ENABLE_ADMIN: 'true'
       ME_CONFIG_BASICAUTH_USERNAME: user_express
       ME_CONFIG_BASICAUTH_PASSWORD: password_express
-      ME_CONFIG_MONGODB_ADMINUSERNAME: user
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGODB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGODB_PASSWORD}
+      ME_CONFIG_MONGODB_DATABASE: ${MONGODB_DB}
+    depends_on:
+      - db-notificacao-mongo
     networks:
       - hospital_network
 
   # ------ MS HISTORICO ------
-  historico-db:
-    image: postgres:15-alpine
-    container_name: historico-db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: historico_db
+  db-historico:
+    image: postgres:16-alpine
+    container_name: db-historico
     volumes:
       - ./data/postgres_data/historico:/var/lib/postgresql/data
     networks:
       - hospital_network
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d historico_db" ]
-      interval: 5s
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 10s
       timeout: 5s
       retries: 5
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${HISTORICO_DB_NAME}
 
   ms-historico:
     build:
@@ -173,18 +182,15 @@ services:
     container_name: ms-historico
     ports:
       - "8084:8084"
-      - "5006:5006"
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      CONSULTA_TOPIC_NAME: consulta-events
-      SPRING_DATASOURCE_URL: jdbc:postgresql://historico-db:5432/historico_db
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-historico:5432/${HISTORICO_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       APP_JWT_SECRET: ${JWT_SECRET}
       APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006"
     depends_on:
-      historico-db:
+      db-historico:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -197,9 +203,9 @@ services:
     image: zookeeper:3.8
     container_name: zookeeper
     environment:
-        ZOO_MY_ID: 1
-        ZOO_CLIENT_PORT: 2181
-        ZOO_TICK_TIME: 2000
+      ZOO_MY_ID: 1
+      ZOO_CLIENT_PORT: 2181
+      ZOO_TICK_TIME: 2000
     networks:
       - hospital_network
 

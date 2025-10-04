@@ -1,0 +1,67 @@
+[
+  {
+    "nome":"Pedro Paciente da Silva",
+    "cpf":"12345678955",
+    "email":"paciente1@email.com",
+    "senha":"123123123",
+    "telefone":"(11)987653355",
+    "role":"PACIENTE",
+    "dataNascimento":"1980-05-15"
+  },
+  {
+    "nome":"Ana Clara Souza",
+    "cpf":"98765432101",
+    "email":"paciente2@email.com",
+    "senha":"123123123",
+    "telefone":"(21)998765432",
+    "role":"PACIENTE",
+    "dataNascimento":"1995-11-20"
+  },
+  {
+    "nome":"Lucas Fernando Torres",
+    "cpf":"45678912344",
+    "email":"paciente3@email.com",
+    "senha":"123123123",
+    "telefone":"(31)988887777",
+    "role":"PACIENTE",
+    "dataNascimento":"2001-08-01"
+  },
+  {
+    "nome":"Mariana Rodrigues Lima",
+    "cpf":"65432198709",
+    "email":"paciente4@email.com",
+    "senha":"123123123",
+    "telefone":"(41)991234567",
+    "role":"PACIENTE",
+    "dataNascimento":"1975-03-10"
+  },
+  {
+    "nome":"João Pedro Alves",
+    "cpf":"32165498711",
+    "email":"paciente5@email.com",
+    "senha":"123123123",
+    "telefone":"(51)980000000",
+    "role":"PACIENTE",
+    "dataNascimento":"1999-01-25"
+  }
+],
+[
+{
+"id": "523b13f8-00d8-4f8c-96f0-4902455cbd51",
+"nome": "Pedro Paciente da Silva",
+"cpf": "12345678955",
+"email": "paciente1@email.com",
+"telefone": "(11)987653355",
+"role": "PACIENTE",
+"dataNascimento": "1980-05-15"
+},
+{
+"id": "1fec62df-ce7f-41a0-aaa6-3651ab442341",
+"nome": "Ana Clara Souza",
+"cpf": "98765432101",
+"email": "paciente2@email.com",
+"telefone": "(21)998765432",
+"role": "PACIENTE",
+"dataNascimento": "1995-11-20"
+},
+]

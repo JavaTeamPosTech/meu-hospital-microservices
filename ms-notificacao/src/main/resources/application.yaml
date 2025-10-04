@@ -3,7 +3,7 @@ server:
 
 spring:
   # ----------------------------------------------------
-  # 1. Configuração do Kafka (Consumidor)
+  # 1. CONFIGURAÇÃO KAFKA (CONSUMIDOR)
   # ----------------------------------------------------
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
@@ -12,17 +12,15 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-#      properties:
-#        spring.json.trusted.packages: "com.postechfiap.meuhospital.contracts.events"
-#        spring.json.value.default.type: com.postechfiap.meuhospital.contracts.events.ConsultaCriadaEvent
   # ----------------------------------------------------
-  # 2. Configuração do MongoDB (Log de Auditoria)
+  # 2. CONFIGURAÇÃO MONGODB (AUDITORIA)
   # ----------------------------------------------------
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI}
+
   # ----------------------------------------------------
-  # 3. Configuração do Spring Mail (MailHog SMTP)
+  # 3. CONFIGURAÇÃO SPRING MAIL (MAILHOG SMTP)
   # ----------------------------------------------------
   mail:
     host: ${SPRING_MAIL_HOST}
@@ -32,8 +30,9 @@ spring:
         smtp:
           auth: false
           starttls.enable: false
+
 # ----------------------------------------------------
-# Propriedades da Aplicação
+# CONFIGURAÇÕES DE DOMÍNIO E LOGS
 # ----------------------------------------------------
 app:
   kafka:
@@ -41,5 +40,6 @@ app:
 
 logging:
   level:
-    com.postechfiap.meuhospital: DEBUG
+    root: INFO
+    com.postechfiap: DEBUG
     org.springframework.mail: DEBUG

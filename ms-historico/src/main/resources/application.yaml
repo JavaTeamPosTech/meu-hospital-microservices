@@ -1,54 +1,70 @@
+server:
+  port: 8084
+
 spring:
   application:
     name: ms-historico
 
-  # Configuração do PostgreSQL
+  # ----------------------------------------------------
+  # 1. CONFIGURAÇÃO DE BANCO DE DADOS
+  # ----------------------------------------------------
   datasource:
-    url: jdbc:postgresql://historico-db:5432/historico_db
-    username: user
-    password: password
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${HISTORICO_DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    # Configuração de pool de conexão (ajustes opcionais para histórico)
+    hikari:
+      maximum-pool-size: 10 # Serviço de leitura pode precisar de mais conexões
+
   jpa:
     hibernate:
-      ddl-auto: update # Cria ou atualiza o schema do DB
-    show-sql: true
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+        jdbc:
+          time_zone: UTC
 
-  security:
-    user:
-      name: ''
-      password: ''
-
-  # Configuração do Kafka (Consumidor)
+  # ----------------------------------------------------
+  # 2. CONFIGURAÇÃO KAFKA (CONSUMIDOR)
+  # ----------------------------------------------------
   kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: historico-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring:
-          json:
-            trusted:
-              packages: com.postechfiap.meuhospital.contracts.events
-            value:
-              default:
-                type: com.postechfiap.meuhospital.contracts.events.ConsultaCriadaEvent
+        spring.json.trusted.packages: com.postechfiap.meuhospital.contracts.events
+        spring.json.value.default.type: com.postechfiap.meuhospital.contracts.events.ConsultaCriadaEvent
 
-  # Configuração do GraphQL
+  # ----------------------------------------------------
+  # 3. CONFIGURAÇÃO GRAPHQL
+  # ----------------------------------------------------
   graphql:
     path: /graphql
     graphiql:
       enabled: true
 
-server:
-  port: 8084
-
+# ----------------------------------------------------
+# CONFIGURAÇÕES DE DOMÍNIO E SEGURANÇA
+# ----------------------------------------------------
 app:
   kafka:
-    topic-historico: notificacao-events
+    topic-historico: notificacao-events # Tópico que o Histórico consome
   jwt:
     secret: ${APP_JWT_SECRET}
     expiration: ${APP_JWT_EXPIRATION_MS}
+
+# ----------------------------------------------------
+# DOCUMENTAÇÃO E LOGS
+# ----------------------------------------------------
+logging:
+  level:
+    root: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: INFO
+    com.postechfiap: DEBUG

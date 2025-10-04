@@ -20,8 +20,15 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${app.jwt.secret}")
-    private String secret;
+    private final String secret;
+
+    private final long expirationTime;
+
+    public JwtService(@Value("${app.jwt.secret}") String secret,
+                      @Value("${app.jwt.expiration}") long expirationTime) {
+        this.secret = secret;
+        this.expirationTime = expirationTime;
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));

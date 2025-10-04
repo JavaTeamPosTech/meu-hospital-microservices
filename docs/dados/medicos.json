@@ -1,0 +1,32 @@
+[
+  {
+    "nome":"Carlos Oliveira",
+    "cpf":"11122233344",
+    "email":"medico1@hospital.com",
+    "senha":"123123123",
+    "telefone":"(81)991112222",
+    "role":"MEDICO",
+    "numeroRegistro":"CRM/PE-12345",
+    "especialidade":"CARDIOLOGIA"
+  },
+  {
+    "nome":"Elisa Santos",
+    "cpf":"22233344455",
+    "email":"medico2@hospital.com",
+    "senha":"123123123",
+    "telefone":"(11)977776666",
+    "role":"MEDICO",
+    "numeroRegistro":"CRM/SP-67890",
+    "especialidade":"ORTOPEDIA"
+  },
+  {
+    "nome":"Fernando Costa",
+    "cpf":"33344455566",
+    "email":"medico3@hospital.com",
+    "senha":"123123123",
+    "telefone":"(48)955554444",
+    "role":"MEDICO",
+    "numeroRegistro":"CRM/SC-54321",
+    "especialidade":"CLÍNICO GERAL"
+  }
+]

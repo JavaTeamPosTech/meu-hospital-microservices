@@ -1,0 +1,20 @@
+[
+  {
+    "nome":"Julia Almeida",
+    "cpf":"44455566677",
+    "email":"enfermeiro1@hospital.com",
+    "senha":"123123123",
+    "telefone":"(11)944443333",
+    "role":"ENFERMEIRO",
+    "numeroRegistro":"COREN-87654"
+  },
+  {
+    "nome":"Ricardo Lopes",
+    "cpf":"55566677788",
+    "email":"enfermeiro2@hospital.com",
+    "senha":"123123123",
+    "telefone":"(21)933332222",
+    "role":"ENFERMEIRO",
+    "numeroRegistro":"COREN-98765"
+  }
+]

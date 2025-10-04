@@ -2,10 +2,13 @@ server:
   port: 8081
 
 spring:
+  # ----------------------------------------------------
+  # 1. CONFIGURAÇÃO DE BANCO DE DADOS
+  # ----------------------------------------------------
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${AGENDAMENTO_DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       max-lifetime: 1800000
@@ -13,16 +16,22 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         jdbc:
           time_zone: UTC
 
+  # ----------------------------------------------------
+  # 2. SERIALIZAÇÃO E JACKSON
+  # ----------------------------------------------------
   jackson:
     default-property-inclusion: non_null
 
+  # ----------------------------------------------------
+  # 3. CONFIGURAÇÃO KAFKA (PRODUTOR E CONSUMIDOR)
+  # ----------------------------------------------------
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     consumer:
@@ -31,7 +40,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.postechfiap.meuhospital.contracts.events"
+        spring.json.trusted.packages: com.postechfiap.meuhospital.contracts.events
         spring.json.value.default.type: com.postechfiap.meuhospital.contracts.events.MedicoEvent
     producer:
       client-id: ms-agendamento-producer
@@ -40,18 +49,24 @@ spring:
       properties:
         spring.json.type.properties.enabled: false
 
+# ----------------------------------------------------
+# CONFIGURAÇÕES DE DOMÍNIO E SEGURANÇA
+# ----------------------------------------------------
 app:
   jwt:
     secret: ${APP_JWT_SECRET}
     expiration: ${APP_JWT_EXPIRATION_MS}
 
-  auth-service-url: http://ms-autenticacao:8080/usuarios
-  internal-secret: "SEGREDO-INTERNO-COMPARTILHADO-COM-AUTH"
+  auth-service-url: http://${AUTH_SERVICE_HOST}:${AUTH_SERVICE_PORT}/usuarios
+  internal-secret: ${INTERNAL_SECRET}
 
   kafka:
     topic-medico-update: medico-events
     topic-notificacao: notificacao-events
 
+# ----------------------------------------------------
+# DOCUMENTAÇÃO E LOGS
+# ----------------------------------------------------
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -60,6 +75,7 @@ springdoc:
 
 logging:
   level:
-    org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
-    com.postechfiap.meuhospital: DEBUG
+    root: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: INFO
+    com.postechfiap: DEBUG

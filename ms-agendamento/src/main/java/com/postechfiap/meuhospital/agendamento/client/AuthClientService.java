@@ -19,17 +19,17 @@ import java.util.UUID;
 public class AuthClientService {
 
     private final WebClient webClient;
-
-    @Value("${app.auth-service-url}")
-    private String authServiceBaseUrl;
-
-    @Value("${app.internal-secret}")
-    private String internalSecret;
+    private final String authServiceBaseUrl; // Agora final
+    private final String internalSecret;     // Agora final
 
     private static final String INTERNAL_SECRET_HEADER = "X-Internal-Secret";
 
-    public AuthClientService(WebClient webClient) {
+    public AuthClientService(WebClient webClient,
+                             @Value("${app.auth-service-url}") String authServiceBaseUrl,
+                             @Value("${app.internal-secret}") String internalSecret) {
         this.webClient = webClient;
+        this.authServiceBaseUrl = authServiceBaseUrl;
+        this.internalSecret = internalSecret;
     }
 
     /**
