@@ -15,10 +15,6 @@ public record ConsultaRequest(
         @Schema(description = "Identificador único do paciente.", example = "d290f1ee-6c54-4b01-90e6-d701748f0851")
         UUID pacienteId,
 
-        @NotBlank(message = "O nome do paciente é obrigatório e deve ser fornecido na requisição.")
-        @Schema(description = "Nome completo do paciente.", example = "João da Silva")
-        String nomePaciente,
-
         @NotNull(message = "O ID do médico é obrigatório.")
         @Schema(description = "Identificador único do médico.", example = "a123f1ee-6c54-4b01-90e6-d701748f0851")
         UUID medicoId,

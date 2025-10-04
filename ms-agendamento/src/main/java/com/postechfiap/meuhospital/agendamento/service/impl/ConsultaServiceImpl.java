@@ -141,9 +141,10 @@ public class ConsultaServiceImpl implements ConsultaService {
     private PacienteDetails buscarValidarPaciente(ConsultaRequest request) {
         PacienteDetails pacienteDetails = authClientService.buscarPacientePorId(request.pacienteId());
 
-        if (!pacienteDetails.nome().equalsIgnoreCase(request.nomePaciente())) {
-            throw new RegraDeNegocioException("O nome do paciente ('" + request.nomePaciente() + "') não corresponde ao nome registrado no sistema de autenticação. Confirme a identidade.");
+        if (pacienteDetails == null) {
+            throw new RecursoNaoEncontradoException("Paciente com ID " + request.pacienteId() + " não encontrado.");
         }
+
         return pacienteDetails;
     }
 
