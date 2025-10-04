@@ -1,0 +1,72 @@
+[
+  {
+    "pacienteId": "23e92504-7c46-469f-bbe9-e38e1ce5c47f",
+    "nomePaciente": "Pedro Paciente da Silva",
+    "medicoId": "668dca87-262e-4136-a58d-d3299188165a",
+    "dataConsulta": "2025-11-15T10:00:00Z",
+    "detalhesDaConsulta": "Avaliação inicial de risco cardíaco."
+  },
+  {
+    "pacienteId": "8391675a-ef9d-4127-bbde-0d0a37a496c5",
+    "nomePaciente": "Ana Clara Souza",
+    "medicoId": "668dca87-262e-4136-a58d-d3299188165a",
+    "dataConsulta": "2025-11-15T10:20:00Z",
+    "detalhesDaConsulta": "Verificação de rotina (teste de conflito)."
+  },
+  {
+    "pacienteId": "7c2208cb-2d93-44a0-bad0-95a9d5bb28e5",
+    "nomePaciente": "Lucas Fernando Torres",
+    "medicoId": "668dca87-262e-4136-a58d-d3299188165a",
+    "dataConsulta": "2025-11-15T10:30:00Z",
+    "detalhesDaConsulta": "Consulta de retorno com exames laboratoriais."
+  },
+  {
+    "pacienteId": "d2a0d5c9-e7fa-492f-9dea-24fd19b4b93c",
+    "nomePaciente": "Mariana Rodrigues Lima",
+    "medicoId": "dd5c5f72-46cf-4f1e-903f-fe9fffb6c8f8",
+    "dataConsulta": "2025-11-15T14:00:00Z",
+    "detalhesDaConsulta": "Avaliação de lesão no joelho esquerdo."
+  },
+  {
+    "pacienteId": "929db4f8-5abe-4db3-bd7d-8a8aed64e548",
+    "nomePaciente": "João Pedro Alves",
+    "medicoId": "390e7edb-2b9f-49ab-ac1d-6b783051ce37",
+    "dataConsulta": "2025-10-05T09:00:00Z",
+    "detalhesDaConsulta": "Consulta de rotina anual (Job de Lembrete)."
+  },
+  {
+    "pacienteId": "23e92504-7c46-469f-bbe9-e38e1ce5c47f",
+    "nomePaciente": "Pedro Paciente da Silva",
+    "medicoId": "dd5c5f72-46cf-4f1e-903f-fe9fffb6c8f8",
+    "dataConsulta": "2025-11-15T15:30:00Z",
+    "detalhesDaConsulta": "Dor súbita no ombro."
+  },
+  {
+    "pacienteId": "8391675a-ef9d-4127-bbde-0d0a37a496c5",
+    "nomePaciente": "Ana Clara Souza",
+    "medicoId": "390e7edb-2b9f-49ab-ac1d-6b783051ce37",
+    "dataConsulta": "2025-11-20T11:00:00Z",
+    "detalhesDaConsulta": "Acompanhamento de pressão arterial."
+  },
+  {
+    "pacienteId": "d2a0d5c9-e7fa-492f-9dea-24fd19b4b93c",
+    "nomePaciente": "Mariana Rodrigues Lima",
+    "medicoId": "390e7edb-2b9f-49ab-ac1d-6b783051ce37",
+    "dataConsulta": "2025-11-21T16:00:00Z",
+    "detalhesDaConsulta": "Check-up geral."
+  },
+  {
+    "pacienteId": "929db4f8-5abe-4db3-bd7d-8a8aed64e548",
+    "nomePaciente": "João Pedro Alves",
+    "medicoId": "dd5c5f72-46cf-4f1e-903f-fe9fffb6c8f8",
+    "dataConsulta": "2025-11-22T08:30:00Z",
+    "detalhesDaConsulta": "Dor nas costas há duas semanas."
+  },
+  {
+    "pacienteId": "8391675a-ef9d-4127-bbde-0d0a37a496c5",
+    "nomePaciente": "Ana Clara Souza",
+    "medicoId": "668dca87-262e-4136-a58d-d3299188165a",
+    "dataConsulta": "2025-12-01T09:30:00Z",
+    "detalhesDaConsulta": "Ecocardiograma agendado."
+  }
+]
