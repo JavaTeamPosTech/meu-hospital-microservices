@@ -338,7 +338,7 @@ A simulação de e-mail é rastreável e visível na interface do **MailHog (Por
 
 ![Mailhog](docs/images/email-agendamento.png)
 * **Imagem 3: Detalhe de um E-mail de Confirmação**
-    * **Descrição:** Mostrar o corpo de um e-mail específico (ex: Confirmação de Agendamento) para validar que o serviço de notificação utiliza os dados do evento corretamente.
+    * **Descrição:** Corpo de um e-mail específico (ex: Confirmação de Agendamento) para validar que o serviço de notificação utiliza os dados do evento corretamente.
 
 ### 6.3. Logs e Provas de Auditoria (Mongo-Express - Porta 8083)
 ![Mongoexpress](docs/images/mongoexpress.png)
