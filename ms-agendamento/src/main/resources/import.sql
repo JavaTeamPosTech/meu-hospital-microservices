@@ -48,4 +48,4 @@ VALUES('532b016b-de33-46e9-b0d1-a0ccfed31b81'::uuid, '2025-10-04 19:11:33.637', 
 
 INSERT INTO public.consultas
 (id, created_at, data_consulta, detalhes_da_consulta, medico_id, nome_medico, nome_paciente, paciente_id, status, updated_at)
-VALUES('4a68af61-bfaa-49dd-827f-cb3269d44edf'::uuid, '2025-10-04 19:11:40.734', '2025-12-03 09:30:00.000', 'Cancelado pela equipe em: 2025-10-04T19:18:22.087292799', '668dca87-262e-4136-a58d-d3299188165a'::uuid, 'Carlos Oliveira', 'Ana Clara Souza', '8391675a-ef9d-4127-bbde-0d0a37a496c5'::uuid, 'CANCELADA', '2025-10-04 19:18:22.094' ON CONFLICT (id) DO NOTHING;;
+VALUES('4a68af61-bfaa-49dd-827f-cb3269d44edf'::uuid, '2025-10-04 19:11:40.734', '2025-12-03 09:30:00.000', 'Cancelado pela equipe em: 2025-10-04T19:18:22.087292799', '668dca87-262e-4136-a58d-d3299188165a'::uuid, 'Carlos Oliveira', 'Ana Clara Souza', '8391675a-ef9d-4127-bbde-0d0a37a496c5'::uuid, 'CANCELADA', '2025-10-04 19:18:22.094') ON CONFLICT (id) DO NOTHING;

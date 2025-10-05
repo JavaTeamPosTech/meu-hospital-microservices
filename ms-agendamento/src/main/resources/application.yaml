@@ -10,14 +10,20 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    continue-on-error: true
+    initialization-mode: never
+    platform: postgresql
     hikari:
       max-lifetime: 1800000
   sql:
     init:
-      mode: always
+      mode: never
   jpa:
     hibernate:
       ddl-auto: update
+      hbm2ddl:
+        import_files:
+          classpath: import.sql
     show-sql: false
     properties:
       hibernate:

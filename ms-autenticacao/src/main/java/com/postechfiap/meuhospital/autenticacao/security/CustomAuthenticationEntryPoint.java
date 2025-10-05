@@ -38,7 +38,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 "timestamp", LocalDateTime.now().toString(),
                 "status", String.valueOf(HttpServletResponse.SC_UNAUTHORIZED),
                 "error", "Unauthorized",
-                "message", "Token ausente ou inválido: " + authException.getMessage(),
+                "message", authException.getMessage(),
                 "path", request.getRequestURI()
         );
 
