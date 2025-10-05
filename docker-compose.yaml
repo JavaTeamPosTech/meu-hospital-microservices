@@ -28,6 +28,7 @@ services:
     container_name: ms-autenticacao
     ports:
       - "8080:8080"
+      - "5006:5005"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/${AUTENTICACAO_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
@@ -37,6 +38,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       AUTH_SERVICE_URL: http://ms-autenticacao:8080/usuarios
       INTERNAL_SECRET: ${INTERNAL_SECRET}
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     depends_on:
       db-auth:
         condition: service_healthy
@@ -76,6 +78,7 @@ services:
     container_name: ms-agendamento
     ports:
       - "8081:8081"
+      - "5005:5005"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db-agendamento:5432/${AGENDAMENTO_DB_NAME}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
@@ -87,6 +90,7 @@ services:
       INTERNAL_SECRET: ${INTERNAL_SECRET}
       AUTH_SERVICE_HOST: ms-autenticacao
       AUTH_SERVICE_PORT: 8080
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     depends_on:
       db-agendamento:
         condition: service_healthy

@@ -1,7 +1,7 @@
 package com.postechfiap.meuhospital.autenticacao.security;
 
-import com.postechfiap.meuhospital.autenticacao.entity.Usuario;
 import com.postechfiap.meuhospital.autenticacao.repository.UsuarioRepository;
+import com.postechfiap.meuhospital.contracts.core.Role;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,13 +10,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.util.Collections;
+
+import java.util.UUID;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -35,38 +40,46 @@ public class SecurityFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         String token = recoverToken(authHeader);
 
         try {
-            if (token != null) {
+            if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
                 String login = jwtService.extractUsername(token);
+                Role role = Role.valueOf(jwtService.extractClaim(token, claims -> claims.get("role", String.class)));
+                UUID userId = jwtService.extractUserId(token);
 
-                if (login != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = new User(
+                        login,
+                        "",
+                        Collections.singletonList(new SimpleGrantedAuthority(role.name()))
+                ) {
+                    public UUID getId() { return userId; }
+                };
 
-                    Optional<Usuario> optionalUser = usuarioRepository.findByEmail(login);
 
-                    if (optionalUser.isPresent()) {
-                        Usuario user = optionalUser.get();
+                if (jwtService.isTokenValid(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
 
-                        if (jwtService.isTokenValid(token, user)) {
-                            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                    user, null, user.getAuthorities());
-
-                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                            SecurityContextHolder.getContext().setAuthentication(authentication);
-                        }
-                    }
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
             filterChain.doFilter(request, response);
 
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(
                     request,
                     response,
-                    new BadCredentialsException("Token inválido ou expirado.", e)
+                    new BadCredentialsException("Token inválido, expirado ou formato incorreto.", e)
             );
         }
     }
@@ -77,4 +90,6 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
         return authHeader.substring(7);
     }
+
+
 }

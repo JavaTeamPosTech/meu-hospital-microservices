@@ -21,9 +21,9 @@ public record ConsultaRequest(
 
         @NotNull(message = "A data da consulta é obrigatória.")
         @Future(message = "A data da consulta deve ser no futuro.")
-        @Schema(description = "Data e hora da consulta, que deve ser no futuro.", example = "2023-12-01T14:30:00")
+        @Schema(description = "Data e hora da consulta, que deve ser no futuro (ISO-8601).", example = "2026-01-01T14:30:00Z")
         LocalDateTime dataConsulta,
 
-        @Schema(description = "Detalhes adicionais sobre a consulta.", example = "Consulta de retorno para avaliação de exames.")
+        @Schema(description = "Detalhes adicionais sobre a consulta (motivo, observações).", example = "Consulta de retorno para avaliação de exames.")
         String detalhesDaConsulta
 ) {}

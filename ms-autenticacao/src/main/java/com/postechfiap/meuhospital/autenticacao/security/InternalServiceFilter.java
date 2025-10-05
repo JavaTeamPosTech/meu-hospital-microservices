@@ -1,5 +1,6 @@
 package com.postechfiap.meuhospital.autenticacao.security;
 
+import com.postechfiap.meuhospital.contracts.core.Role;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,10 +8,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Filtro que verifica um cabeçalho secreto para liberar chamadas Service-to-Service
@@ -26,11 +36,12 @@ public class InternalServiceFilter extends OncePerRequestFilter {
     private static final String TARGET_PATH = "/usuarios/";
     private static final String TARGET_METHOD = "GET";
 
-    public InternalServiceFilter() {
+    public InternalServiceFilter(@Value("${app.internal-secret}") String requiredSecret) {
+        this.requiredSecret = requiredSecret;
     }
 
     /**
-     * CRÍTICO: Este método decide se o filtro DEVE ser executado.
+     * Este método decide se o filtro DEVE ser executado.
      * Devemos executá-lo SOMENTE se for o GET na rota de usuários.
      */
     @Override
@@ -38,12 +49,7 @@ public class InternalServiceFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        // Se NÃO for GET E NÃO começar com /usuarios/, então DEVE SER IGNORADO (true)
-        if (!method.equals(TARGET_METHOD) || !path.startsWith(TARGET_PATH)) {
-            return true;
-        }
-        // Se for GET /usuarios/{id}, o filtro deve ser EXECUTADO (false)
-        return false;
+        return !method.equals(TARGET_METHOD) || !path.startsWith(TARGET_PATH);
     }
 
     @Override
@@ -52,19 +58,25 @@ public class InternalServiceFilter extends OncePerRequestFilter {
 
         String clientSecret = request.getHeader(INTERNAL_SECRET_HEADER);
 
-        // Se o cabeçalho secreto não foi enviado, permite que o filtro JWT (SecurityFilter) cuide da autenticação.
         if (clientSecret == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Se a chave secreta foi enviada (chamada Service-to-Service)
         if (requiredSecret.equals(clientSecret)) {
-            // SUCESSO: Chave válida. Deixa a requisição passar.
+            UserDetails userDetails = new User(
+                    "ms-agendamento",
+                    "",
+                    Collections.singletonList(new SimpleGrantedAuthority("INTERNAL_SERVICE_ACCESS"))
+            );
+
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
-            return;
         } else {
-            // FALHA: Chave inválida. Bloqueia a chamada com 401.
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
             response.getWriter().write("{\"message\":\"Acesso negado: Chave de serviço interna inválida.\"}");

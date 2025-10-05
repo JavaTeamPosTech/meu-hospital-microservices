@@ -47,24 +47,20 @@ public class SecurityFilter extends OncePerRequestFilter {
         try {
             if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // 1. Extrai claims essenciais sem ir ao banco
                 String login = jwtService.extractUsername(token);
                 Role role = Role.valueOf(jwtService.extractClaim(token, claims -> claims.get("role", String.class)));
                 UUID userId = jwtService.extractUserId(token);
 
-                // 2. Cria UserDetails "fake" apenas com as claims necessárias para o @PreAuthorize
                 UserDetails userDetails = new User(
-                        login, // username
-                        "", // password (não importa em stateless)
+                        login,
+                        "",
                         Collections.singletonList(new SimpleGrantedAuthority(role.name()))
                 ) {
-                    // Adiciona o ID do usuário ao objeto principal para uso no SpEL
                     public UUID getId() { return userId; }
                 };
 
 
                 if (jwtService.isTokenValid(token, userDetails)) {
-                    // 3. Cria contexto de autenticação
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
 

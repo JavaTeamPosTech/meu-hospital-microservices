@@ -50,6 +50,9 @@ public class ConsultaServiceImpl implements ConsultaService {
     @Override
     @Transactional
     public ConsultaResponse criarConsulta(ConsultaRequest request) {
+        log.info("INICIANDO CRIAÇÃO DE CONSULTA. Paciente ID: {}, Médico ID: {}, Data: {}",
+                request.pacienteId(), request.medicoId(), request.dataConsulta());
+
         MedicoProjection medico = validarMedicoExistente(request.medicoId());
         validarDisponibilidade(request.medicoId(), request.dataConsulta());
         PacienteDetails pacienteDetails = buscarValidarPaciente(request);
@@ -58,6 +61,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         Consulta consultaSalva = consultaRepository.save(novaConsulta);
 
         publishConsultaEvent(consultaSalva, pacienteDetails, "CRIACAO");
+        log.info("SUCESSO: Consulta ID {} criada e evento CRIACAO publicado.", consultaSalva.getId());
 
         return mapToResponse(consultaSalva);
     }
@@ -65,10 +69,16 @@ public class ConsultaServiceImpl implements ConsultaService {
     @Override
     @Transactional
     public ConsultaResponse editarConsulta(UUID id, ConsultaRequest request) {
+        log.info("INICIANDO EDIÇÃO DE CONSULTA ID {}. Nova Data: {}", id, request.dataConsulta());
+
         Consulta consultaExistente = consultaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta com ID " + id + " não encontrada para edição."));
+                .orElseThrow(() -> {
+                    log.warn("Falha de edição: Consulta ID {} não encontrada.", id);
+                    return new RecursoNaoEncontradoException("Consulta com ID " + id + " não encontrada para edição.");
+                });
 
         if (consultaExistente.getStatus() != StatusConsulta.AGENDADA) {
+            log.warn("Falha de edição: Consulta ID {} não está AGENDADA.", id);
             throw new RegraDeNegocioException("Consulta com status " + consultaExistente.getStatus().name() + " não pode ser editada.");
         }
 
@@ -82,6 +92,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         Consulta consultaAtualizada = consultaRepository.save(consultaExistente);
 
         publishConsultaEvent(consultaAtualizada, pacienteDetails, "ATUALIZACAO");
+        log.info("SUCESSO: Consulta ID {} atualizada e evento ATUALIZACAO publicado.", id);
 
         return mapToResponse(consultaAtualizada);
     }
@@ -89,10 +100,16 @@ public class ConsultaServiceImpl implements ConsultaService {
     @Override
     @Transactional
     public void cancelarConsulta(UUID id) {
+        log.warn("INICIANDO CANCELAMENTO DE CONSULTA ID {}.", id);
+
         Consulta consultaExistente = consultaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta com ID " + id + " não encontrada para cancelamento."));
+                .orElseThrow(() -> {
+                    log.warn("Falha de cancelamento: Consulta ID {} não encontrada.", id);
+                    return new RecursoNaoEncontradoException("Consulta com ID " + id + " não encontrada para cancelamento.");
+                });
 
         if (consultaExistente.getStatus() == StatusConsulta.CANCELADA) {
+            log.warn("Falha de cancelamento: Consulta ID {} já está CANCELADA.", id);
             throw new RegraDeNegocioException("A consulta já está cancelada.");
         }
 
@@ -104,10 +121,13 @@ public class ConsultaServiceImpl implements ConsultaService {
         Consulta consultaCancelada = consultaRepository.save(consultaExistente);
 
         publishConsultaEvent(consultaCancelada, pacienteDetails, "CANCELAMENTO");
+        log.warn("SUCESSO: Consulta ID {} cancelada e evento CANCELAMENTO publicado.", id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ConsultaResponse buscarConsultaPorId(UUID id) {
+        log.debug("Buscando consulta por ID: {}", id);
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta com ID " + id + " não encontrada."));
         return mapToResponse(consulta);
@@ -115,12 +135,15 @@ public class ConsultaServiceImpl implements ConsultaService {
 
     @Override
     public boolean isPacienteDaConsulta(UUID consultaId, UUID pacienteId) {
+        log.debug("Verificando se Paciente ID {} é proprietário da Consulta ID {}.", pacienteId, consultaId);
         return consultaRepository.findByIdAndPacienteId(consultaId, pacienteId).isPresent();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MedicoProjectionResponse> listarMedicosDisponiveis(String especialidade) {
+        log.info("INICIANDO listagem de médicos. Filtro: {}", StringUtils.hasText(especialidade) ? especialidade : "Nenhum");
+
         List<MedicoProjection> medicos;
 
         if (StringUtils.hasText(especialidade)) {
@@ -129,18 +152,21 @@ public class ConsultaServiceImpl implements ConsultaService {
             medicos = medicoProjectionRepository.findAll();
         }
 
-        return medicos.stream()
+        List<MedicoProjectionResponse> response = medicos.stream()
                 .filter(medico -> medico.getRole() == com.postechfiap.meuhospital.contracts.core.Role.MEDICO)
                 .map(this::mapToMedicoResponse)
                 .collect(Collectors.toList());
+
+        log.info("Listagem de médicos concluída. Total: {}", response.size());
+        return response;
     }
 
     @Override
     @Transactional
     public int marcarConsultasAnterioresComoRealizadas() {
         LocalDateTime ontemAmeiaNoite = LocalDate.now().atStartOfDay();
+        log.info("JOB SCHEDULER: Iniciando marcação de consultas REALIZADAS antes de {}.", ontemAmeiaNoite);
 
-        // Busca todas as consultas AGENDADAS cuja data consulta é anterior ao início de hoje
         List<Consulta> consultasExpiradas = consultaRepository.findAllByStatusAndDataConsultaBefore(
                 StatusConsulta.AGENDADA,
                 ontemAmeiaNoite
@@ -148,11 +174,10 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         consultasExpiradas.forEach(consulta -> {
             consulta.setStatus(StatusConsulta.REALIZADA);
-            // Publicar evento REALIZADA para o histórico se necessário, ou apenas logar
-            // Por simplicidade, faremos apenas a atualização de status aqui.
         });
 
         consultaRepository.saveAll(consultasExpiradas);
+        log.info("JOB CONCLUÍDO: {} consultas marcadas como REALIZADA.", consultasExpiradas.size());
         return consultasExpiradas.size();
     }
 
@@ -162,6 +187,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         LocalDate amanha = LocalDate.now().plusDays(1);
         LocalDateTime inicioAmanha = amanha.atStartOfDay();
         LocalDateTime fimAmanha = amanha.atTime(LocalTime.MAX);
+        log.info("JOB SCHEDULER: Buscando consultas AGENDADAS para o dia {}.", amanha);
 
         List<Consulta> consultasAmanha = consultaRepository.findAllByStatusAndDataConsultaBetween(
                 StatusConsulta.AGENDADA,
@@ -172,13 +198,13 @@ public class ConsultaServiceImpl implements ConsultaService {
         consultasAmanha.forEach(consulta -> {
             try {
                 PacienteDetails pacienteDetails = authClientService.buscarPacientePorId(consulta.getPacienteId());
-
                 publishConsultaEvent(consulta, pacienteDetails, "LEMBRETE");
             } catch (Exception e) {
-                log.error("Falha ao buscar detalhes do paciente {} para lembrete: {}", consulta.getPacienteId(), e.getMessage());
+                log.error("ERRO JOB: Falha ao buscar detalhes do paciente {} para lembrete: {}", consulta.getPacienteId(), e.getMessage());
             }
         });
 
+        log.info("JOB CONCLUÍDO: {} lembretes publicados para amanhã.", consultasAmanha.size());
         return consultasAmanha.size();
     }
 
@@ -192,27 +218,31 @@ public class ConsultaServiceImpl implements ConsultaService {
     }
 
     private PacienteDetails buscarValidarPaciente(ConsultaRequest request) {
+        log.debug("RPC SÍNCRONO: Buscando detalhes do paciente {} no ms-autenticacao.", request.pacienteId());
+
         PacienteDetails pacienteDetails = authClientService.buscarPacientePorId(request.pacienteId());
 
-        if (pacienteDetails == null) {
-            throw new RecursoNaoEncontradoException("Paciente com ID " + request.pacienteId() + " não encontrado.");
+        if (pacienteDetails == null || pacienteDetails.nome().isBlank()) {
+            log.warn("FALHA VALIDAÇÃO: Paciente não encontrado. Recebido: {}",
+                    pacienteDetails != null ? pacienteDetails.nome() : "NULO");
+            throw new RegraDeNegocioException("Paciente não encontrado.");
         }
-
+        log.debug("RPC SUCESSO: Detalhes do paciente validados.");
         return pacienteDetails;
     }
 
     private MedicoProjection validarMedicoExistente(UUID medicoId) {
+        log.debug("Validando existência do Médico ID: {}", medicoId);
         return medicoProjectionRepository.findById(medicoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Médico com ID " + medicoId + " não encontrado para agendamento."));
     }
 
-    /**
-     * Validação de sobreposição de horário usando duração fixa.
-     */
     private void validarDisponibilidade(UUID medicoId, LocalDateTime dataConsulta) {
         LocalDateTime fimConsulta = dataConsulta.plusMinutes(DURACAO_PADRAO_MINUTOS);
+        log.debug("Validando slot para Médico ID {} entre {} e {}.", medicoId, dataConsulta, fimConsulta);
 
         if (consultaRepository.existsByMedicoIdAndDataConsultaBetween(medicoId, dataConsulta, fimConsulta)) {
+            log.warn("FALHA DISPONIBILIDADE: Conflito de horário encontrado para o Médico ID {}.", medicoId);
             throw new RegraDeNegocioException("O médico já possui uma consulta marcada para este horário.");
         }
     }
@@ -220,6 +250,8 @@ public class ConsultaServiceImpl implements ConsultaService {
     private void publishConsultaEvent(Consulta consulta, PacienteDetails pacienteDetails, String tipoEvento) {
         String email = pacienteDetails != null ? pacienteDetails.email() : null;
         String telefone = pacienteDetails != null ? pacienteDetails.telefone() : null;
+
+        log.debug("Publicando evento {} para Consulta ID {}.", tipoEvento, consulta.getId());
 
         ConsultaCriadaEvent event = new ConsultaCriadaEvent(
                 consulta.getId(),

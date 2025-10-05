@@ -35,11 +35,12 @@ public class NotificacaoService {
      */
     public void processarNotificacao(ConsultaCriadaEvent event) {
 
+        log.info("INICIANDO: Processamento de evento de notificação. Tipo: {}, Consulta ID: {}", event.tipoEvento(), event.consultaId());
         String statusEnvio = "SUCESSO";
 
         try {
             if (event.emailPaciente() == null || event.emailPaciente().isBlank()) {
-                log.warn("Notificação ignorada: E-mail do paciente {} não fornecido no evento.", event.nomePaciente());
+                log.warn("NOTIFICAÇÃO FALHOU: E-mail do paciente não fornecido no evento ID {}.", event.consultaId());
                 statusEnvio = "FALHA - EMAIL AUSENTE";
                 return;
             }
@@ -68,16 +69,16 @@ public class NotificacaoService {
 
             // Simula o envio via MailHog
             mailSender.send(message);
-            log.info("E-mail SIMULADO enviado via MailHog para: {} (Tipo: {})", event.emailPaciente(), event.tipoEvento());
+            log.info("ENVIO SUCESSO: E-mail SIMULADO enviado para: {} (Tipo: {})", event.emailPaciente(), event.tipoEvento());
 
         } catch (Exception e) {
-            log.error("Falha ao enviar e-mail via MailHog para {}: {}", event.emailPaciente(), e.getMessage());
+            log.error("FALHA SMTP: Erro ao enviar e-mail via MailHog. Motivo: {}", e.getMessage(), e);
             statusEnvio = "FALHA - ERRO SMTP";
         } finally {
-            // Salva o log de auditoria no MongoDB
+            // Salva o log de auditoria no MongoDB, independentemente do resultado
             NotificacaoLog logEntry = new NotificacaoLog(event, statusEnvio);
             notificacaoRepository.save(logEntry);
-            log.info("Log de notificação salvo no MongoDB. Status: {}", statusEnvio);
+            log.info("AUDITORIA SUCESSO: Log de notificação salvo no MongoDB. Status: {}", statusEnvio);
         }
     }
 

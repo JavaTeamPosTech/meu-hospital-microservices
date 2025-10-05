@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Componente responsável por enviar eventos de consulta (criação/atualização/cancelamento)
- * para o Kafka, a serem consumidos pelo ms-notificacao.
+ * Produtor Kafka responsável por enviar eventos de consulta (criação/atualização/cancelamento)
+ * para o tópico de notificação.
  */
 @Component
 public class ConsultaProducer {
@@ -26,8 +26,8 @@ public class ConsultaProducer {
     }
 
     /**
-     * Publica um evento de criação, atualização ou cancelamento de consulta.
-     * @param event O DTO de evento (ConsultaCriadaEvent) com os dados e tipo de evento.
+     * Publica um evento de consulta no Kafka.
+     * * @param event O DTO de evento (ConsultaCriadaEvent) com os dados e tipo de evento.
      */
     public void sendConsultaEvent(ConsultaCriadaEvent event) {
         String key = event.consultaId().toString();
@@ -35,10 +35,10 @@ public class ConsultaProducer {
         kafkaTemplate.send(notificacaoTopic, key, event)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
-                        log.info("Kafka: Evento Consulta [%s] ID [%s] publicado com sucesso no tópico %s",
+                        log.info("KAFKA SUCESSO: Evento Consulta [{}] ID [{}] publicado no tópico {}.",
                                 event.tipoEvento(), key, notificacaoTopic);
                     } else {
-                        log.error("Kafka: Falha ao publicar evento Consulta [%s] ID [%s] no tópico %s",
+                        log.error("KAFKA FALHA: Erro ao publicar evento Consulta [{}] ID [{}] no tópico {}.",
                                 event.tipoEvento(), key, notificacaoTopic, ex);
                     }
                 });

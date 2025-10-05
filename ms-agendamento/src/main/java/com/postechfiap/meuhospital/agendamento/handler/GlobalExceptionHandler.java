@@ -11,6 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -25,16 +27,18 @@ import java.util.Map;
 @Hidden
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /**
      * Constrói uma resposta de erro padronizada.
      */
-    private Map<String, Object> buildErrorResponse(HttpStatus status, String message, String path) {
+    private Map<String, Object> buildErrorResponse(HttpStatus status, String message, HttpServletRequest request) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
         errorResponse.put("status", status.value());
         errorResponse.put("error", status.getReasonPhrase());
         errorResponse.put("message", message);
-        errorResponse.put("path", path);
+        errorResponse.put("path", request.getRequestURI());
         return errorResponse;
     }
 
@@ -53,10 +57,12 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
+        log.warn("VALIDAÇÃO FALHOU (400): {} erros em {}.", errors.size(), request.getRequestURI());
+
         Map<String, Object> response = buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
-                "Erros de validação encontrados na requisição.",
-                request.getRequestURI()
+                "Erros de validação encontrados. Verifique os campos.",
+                request
         );
         response.put("validationErrors", errors);
 
@@ -71,26 +77,30 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleRegraDeNegocioException(
             RegraDeNegocioException ex, HttpServletRequest request) {
 
+        log.warn("REGRA DE NEGÓCIO VIOLADA (400): {}", ex.getMessage());
+
         Map<String, Object> response = buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage(),
-                request.getRequestURI()
+                request
         );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     /**
-     * 3. Trata exceções de recurso não encontrado (lançadas pelo serviço ou pelo AuthClientService). Retorna 404 Not Found.
+     * 3. Trata exceções de recurso não encontrado. Retorna 404 Not Found.
      */
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<Map<String, Object>> handleRecursoNaoEncontrado(
             RecursoNaoEncontradoException ex, HttpServletRequest request) {
 
+        log.info("RECURSO NÃO ENCONTRADO (404): {}", ex.getMessage());
+
         Map<String, Object> response = buildErrorResponse(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage(),
-                request.getRequestURI()
+                request
         );
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
@@ -106,13 +116,16 @@ public class GlobalExceptionHandler {
         String message = "Erro de integridade de dados. Verifique unicidade ou campos obrigatórios.";
 
         if (ex.getRootCause() != null && ex.getRootCause().getMessage().contains("violates")) {
+            // Tenta extrair a mensagem de erro específica do PostgreSQL
             message = ex.getRootCause().getMessage().split("Detalhe: ")[0];
         }
+
+        log.error("ERRO DE DB (400): Violação de Integridade. Mensagem: {}", message);
 
         Map<String, Object> response = buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 message,
-                request.getRequestURI()
+                request
         );
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }

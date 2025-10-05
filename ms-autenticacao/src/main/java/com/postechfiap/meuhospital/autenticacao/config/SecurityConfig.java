@@ -58,7 +58,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
 
                                 // CRÍTICO: Libera a rota para o mundo. O InternalServiceFilter é o firewall.
-                                .requestMatchers(HttpMethod.GET, "/usuarios/{id}").permitAll()
+//                                .requestMatchers(HttpMethod.GET, "/usuarios/{id}").permitAll()
 
                                 // Infraestrutura
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

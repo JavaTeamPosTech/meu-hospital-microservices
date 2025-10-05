@@ -7,10 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Consumidor Kafka responsável por receber eventos do ms-autenticacao
- * e manter a MedicoProjection (cópia local dos médicos) atualizada no banco de dados do ms-agendamento.
+ * e manter a MedicoProjection (cópia local dos médicos) atualizada.
  */
 @Component
 public class MedicoConsumer {
@@ -26,14 +27,15 @@ public class MedicoConsumer {
 
     /**
      * Listener que consome eventos de atualização/criação de médicos.
-     * O 'group-id' é definido no application.yaml como 'agendamento-medicos-group'.
      */
     @KafkaListener(topics = TOPIC_MEDICO_EVENTS, groupId = "${spring.kafka.consumer.group-id}")
+    @Transactional
     public void consume(MedicoEvent event) {
-        log.info("Kafka: Evento MedicoEvent recebido. Tipo: {}", event.tipoEvento());
+        log.info("KAFKA CONSUMO: Evento MedicoEvent recebido. User ID: {}, Tipo: {}", event.userId(), event.tipoEvento());
 
         MedicoProjection projection = new MedicoProjection();
 
+        // Mapeamento direto de Evento para Entidade de Projeção
         projection.setId(event.userId());
         projection.setNome(event.nome());
         projection.setNumeroRegistro(event.numeroRegistro());
@@ -42,6 +44,6 @@ public class MedicoConsumer {
 
         repository.save(projection);
 
-        log.info("MedicoProjection (ID: {}) atualizada/criada com sucesso no DB local.", event.userId());
+        log.info("KAFKA SUCESSO: MedicoProjection ID {} atualizada/criada no DB local.", event.userId());
     }
 }

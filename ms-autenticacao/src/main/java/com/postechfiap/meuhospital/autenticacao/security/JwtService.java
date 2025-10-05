@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 /**
@@ -23,11 +24,15 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${app.jwt.secret}")
     private String secret;
 
-    @Value("${app.jwt.expiration}")
     private long expirationTime;
+
+    public JwtService(@Value("${app.jwt.secret}") String secret,
+                      @Value("${app.jwt.expiration}") long expirationTime) {
+        this.secret = secret;
+        this.expirationTime = expirationTime;
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -93,4 +98,17 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
+
+    /**
+     * Extrai o ID do usuário (UUID) do token JWT.
+     */
+    public UUID extractUserId(String token) {
+        final Claims claims = extractAllClaims(token);
+        String idString = claims.get("id", String.class);
+        if (idString == null) {
+            throw new IllegalArgumentException("Token não contém o ID do usuário (claim 'id').");
+        }
+        return UUID.fromString(idString);
+    }
+
 }
