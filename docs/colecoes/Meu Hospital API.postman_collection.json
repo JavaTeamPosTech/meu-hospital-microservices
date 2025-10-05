@@ -1,0 +1,363 @@
+{
+	"info": {
+		"_postman_id": "9f0c04cc-68ed-4ddc-8027-3ffabed7001b",
+		"name": "Meu Hospital API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12166195"
+	},
+	"item": [
+		{
+			"name": "MS 1: Autenticação e Cadastro (8080)",
+			"item": [
+				{
+					"name": "1.1 - [PUBLIC] Cadastrar Novo Usuário",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Doutor Exemplo\",\n  \"cpf\": \"11122233344\",\n  \"email\": \"doutor.exemplo@hospital.com\",\n  \"senha\": \"123456\",\n  \"telefone\": \"(81) 99999-0000\",\n  \"role\": \"MEDICO\",\n  \"numeroRegistro\": \"CRM/SP-12345\",\n  \"especialidade\": \"CARDIOLOGIA\"\n}"
+						},
+						"url": {
+							"raw": "{{authBaseUrl}}/auth/register",
+							"host": [
+								"{{authBaseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.2 - [PUBLIC] Login e Obter JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Salva o token JWT na variável de ambiente para uso futuro",
+									"const responseJson = pm.response.json();",
+									"if (responseJson.token) {",
+									"    pm.environment.set(\"bearerToken\", responseJson.token);",
+									"    console.log(\"Token JWT salvo com sucesso.\");",
+									"} else {",
+									"console.log(\"Login falhou ou token não encontrado.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"doutor.exemplo@hospital.com\",\n  \"senha\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{authBaseUrl}}/auth/login",
+							"host": [
+								"{{authBaseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "1.3 - [AUTH] Buscar Usuário por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{authBaseUrl}}/usuarios/{{id_usuario_a_buscar}}",
+							"host": [
+								"{{authBaseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"{{id_usuario_a_buscar}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestão de usuários e obtenção de Token JWT."
+		},
+		{
+			"name": "MS 2: Agendamento Consultas (8081)",
+			"item": [
+				{
+					"name": "2.1 - [AUTH] Listar Médicos (Projeção CQRS)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{agendamentoBaseUrl}}/consultas/medicos?especialidade=CARDIOLOGIA",
+							"host": [
+								"{{agendamentoBaseUrl}}"
+							],
+							"path": [
+								"consultas",
+								"medicos"
+							],
+							"query": [
+								{
+									"key": "especialidade",
+									"value": "CARDIOLOGIA",
+									"description": "Filtro opcional"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.2 - [AUTH] Criar Nova Consulta",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pacienteId\": \"{{id_paciente}}\",\n  \"medicoId\": \"{{id_medico}}\",\n  \"dataConsulta\": \"2026-10-10T10:00:00Z\",\n  \"detalhesDaConsulta\": \"Primeira consulta de rotina.\"\n}"
+						},
+						"url": {
+							"raw": "{{agendaBaseUrl}}/consultas",
+							"host": [
+								"{{agendaBaseUrl}}"
+							],
+							"path": [
+								"consultas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.3 - [AUTH] Buscar Consulta por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{agendamentoBaseUrl}}/consultas/{{id_consulta}}",
+							"host": [
+								"{{agendamentoBaseUrl}}"
+							],
+							"path": [
+								"consultas",
+								"{{id_consulta}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2.4 - [AUTH] Cancelar Consulta (DELETE Lógico)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{agendamentoBaseUrl}}/consultas/{{id_consulta_a_cancelar}}",
+							"host": [
+								"{{agendamentoBaseUrl}}"
+							],
+							"path": [
+								"consultas",
+								"{{id_consulta_a_cancelar}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para criação e gestão de consultas. Todos exigem autenticação JWT."
+		},
+		{
+			"name": "MS 3: Histórico - GraphQL (8084)",
+			"item": [
+				{
+					"name": "3.1 - Histórico Consultas (Listagem Rápida)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query ListaRapida {consultasHistorico {id dataConsulta nomePaciente nomeMedico status}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{historicoBaseUrl}}/graphql",
+							"host": [
+								"{{historicoBaseUrl}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.2 - Histórico por ID do Paciente (Variáveis)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query BuscarPorPaciente($pacienteId: ID!) { consultasHistoricoPorPaciente(pacienteId: $pacienteId) { id dataConsulta status nomeMedico } }\",\n  \"variables\": {\n    \"pacienteId\": \"{{id_paciente_a_buscar}}\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{historicoBaseUrl}}/graphql",
+							"host": [
+								"{{historicoBaseUrl}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.3 - Histórico por ID do Médico (Variáveis)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"query BuscarPorMedico($medicoId: ID!) { consultasHistoricoPorMedico(medicoId: $medicoId) { id nomePaciente dataConsulta detalhesDaConsulta } }\",\n  \"variables\": {\n    \"medicoId\": \"{{id_medico_a_buscar}}\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{historicoBaseUrl}}/graphql",
+							"host": [
+								"{{historicoBaseUrl}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Consultas otimizadas de leitura (Read-Model) do Histórico."
+		}
+	]
+}
