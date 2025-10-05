@@ -324,8 +324,6 @@ A simulação de e-mail é rastreável e visível na interface do **MailHog (Por
 
 ## VI. Observabilidade e Auditoria (Visuais Essenciais)
 
-Esta seção deve conter as imagens que comprovam a funcionalidade e rastreabilidade da arquitetura.
-
 ### 6.1. Fluxos de Mensageria (Kafka-UI - Porta 8085)
 ![Captura de tela do Kafka-UI com Tópicos Ativos](docs/images/kafka-ui.png)
 * **Imagem 1: Tópicos Ativos no Kafka-UI**
