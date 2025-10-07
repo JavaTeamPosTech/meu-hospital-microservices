@@ -4,7 +4,6 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <!-- Versão do Spring Boot mantida em 3.5.6 -->
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.5.6</version>
@@ -20,7 +19,6 @@
   <properties>
     <java.version>21</java.version>
 
-    <!-- VERSÕES EXTERNAS E FIXAS -->
     <lombok.version>1.18.30</lombok.version>
     <jjwt.version>0.12.5</jjwt.version>
     <springdoc.version>2.5.0</springdoc.version>
@@ -39,14 +37,8 @@
     <module>ms-historico</module>
   </modules>
 
-  <!-- GERENCIAMENTO DE DEPENDÊNCIAS -->
   <dependencyManagement>
     <dependencies>
-
-      <!-- REMOVIDO: O bloco de importação do spring-boot-dependencies foi removido
-           porque o Parent já cuida disso, e estava causando erro de resolução de versão. -->
-
-      <!-- DEPENDÊNCIAS QUE PRECISAM DE VERSÃO EXPLÍCITA (MANTIDAS) -->
       <dependency>
         <groupId>org.springframework.kafka</groupId>
         <artifactId>spring-kafka</artifactId>
@@ -87,7 +79,6 @@
     </dependencies>
   </dependencyManagement>
 
-  <!-- DEPENDÊNCIAS COMUNS (Lombok e Teste continuam aqui) -->
   <dependencies>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -109,7 +100,6 @@
     </dependency>
   </dependencies>
 
-  <!-- PLUGINS -->
   <build>
     <pluginManagement>
       <plugins>
