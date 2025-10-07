@@ -337,7 +337,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"query\": \"query BuscarPorMedico($medicoId: ID!) { consultasHistoricoPorMedico(medicoId: $medicoId) { id nomePaciente dataConsulta detalhesDaConsulta } }\",\n  \"variables\": {\n    \"medicoId\": \"{{id_medico_a_buscar}}\"\n  }\n}",
+							"raw": "{\n  \"query\": \"query BuscarPorMedico($medicoId: ID!) { consultasHistoricoPorMedico(medicoId: $medicoId) { id nomePaciente dataConsulta  } }\",\n  \"variables\": {\n    \"medicoId\": \"{{id_medico_a_buscar}}\"\n  }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
